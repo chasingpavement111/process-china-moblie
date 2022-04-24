@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinamobile.zj.flowProcess.mapper.WbFlowResourceInstanceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstance">
+        <id column="resource_instance_uuid" property="resourceInstanceUuid"/>
+        <result column="order_uuid" property="orderUuid"/>
+        <result column="flow_resource_definition_key" property="flowResourceDefinitionKey"/>
+        <result column="former_resource_instance_uuid" property="formerResourceInstanceUuid"/>
+        <result column="latter_resource_instance_uuid" property="latterResourceInstanceUuid"/>
+        <result column="create_time" property="createTime"/>
+        <result column="input_variables" property="inputVariables"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operate_time" property="operateTime"/>
+        <result column="output_variables" property="outputVariables"/>
+        <result column="status" property="status"/>
+        <result column="valid" property="valid"/>
+    </resultMap>
+
+    <resultMap id="DetailedBaseResultMap" extends="BaseResultMap"
+               type="com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstanceDO">
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        resource_instance_uuid
+        , order_uuid, flow_resource_definition_key, former_resource_instance_uuid, latter_resource_instance_uuid, create_time, input_variables, operator_id, operate_time, output_variables, status, valid
+    </sql>
+
+    <insert id="insert">
+        insert into wb_flow_resource_instance (resource_instance_uuid, order_uuid, flow_resource_definition_key,
+        former_resource_instance_uuid, create_time, operate_time,
+        input_variables, status, valid) <!--不包括：latter_resource_instance_uuid, operator_id, output_variables-->
+        values (#{entity.resourceInstanceUuid},
+        #{entity.orderUuid},
+        #{entity.flowResourceDefinitionKey},
+        #{entity.formerResourceInstanceUuid},
+        #{entity.createTime},
+        #{entity.operateTime},
+        #{entity.inputVariables},
+        #{entity.status},
+        #{entity.valid}
+        )
+    </insert>
+
+    <update id="updateForCompletion">
+        update wb_flow_resource_instance r
+        set r.status          = #{entity.status},
+            r.operate_time=#{entity.operateTime},
+            r.operator_id=#{entity.operatorId},
+            r.output_variables=#{entity.outputVariables}
+        where r.resource_instance_uuid = #{entity.resourceInstanceUuid}
+    </update>
+
+    <update id="updateLatterInstance">
+        update wb_flow_resource_instance r
+        set r.latter_resource_instance_uuid = #{entity.latterResourceInstanceUuid}
+        where r.resource_instance_uuid = #{entity.resourceInstanceUuid}
+    </update>
+
+    <select id="getInstanceByOrderUuid" resultMap="DetailedBaseResultMap">
+        select *
+        from wb_flow_resource_instance r
+        where r.order_uuid = #{orderUuid}
+        <!--        <if test="instanceStatus!=null and instanceStatus!=''">-->
+        <!--todo zj 直接不等于空字符串不就行了吗？？？？ -->
+        <if test="instanceStatus!=''">
+            and r.status = #{instanceStatus}
+        </if>
+    </select>
+
+    <select id="getInstanceByInstanceUuid" resultMap="DetailedBaseResultMap">
+        select *
+        from wb_flow_resource_instance r
+        where r.resource_instance_uuid = #{resourceInstanceUuid}
+    </select>
+
+    <select id="getInstanceByOrderUuidList" resultMap="BaseResultMap">
+        select *
+        from wb_flow_resource_instance i
+        where i.order_uuid in
+        <foreach collection="orderUuidList" separator="," open="(" close=")" item="item">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

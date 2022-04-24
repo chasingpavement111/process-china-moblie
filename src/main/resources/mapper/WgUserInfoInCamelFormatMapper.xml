@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinamobile.zj.mapper.user.WgUserInfoInCamelFormatMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.chinamobile.zj.entity.user.WgUserInfo">
+        <result column="USER_ID" property="userId" />
+        <result column="LOGIN_ID" property="loginId" />
+        <result column="OP_ID" property="opId" />
+        <result column="ORG_ID" property="orgId" />
+        <result column="NAME" property="name" />
+        <result column="TEL" property="tel" />
+        <result column="AREA_ID3" property="areaId3" />
+        <result column="AREA_NAME3" property="areaName3" />
+        <result column="AREA_ID4" property="areaId4" />
+        <result column="AREA_NAME4" property="areaName4" />
+        <result column="AREA_ID5" property="areaId5" />
+        <result column="AREA_NAME5" property="areaName5" />
+        <result column="WDBH" property="chlId" />
+        <result column="WDMC" property="chlName" />
+        <result column="XTZHRYCODE" property="userCodeOfSystemAccount" />
+        <result column="EML" property="eml" />
+        <result column="RLBH" property="rlBh" />
+        <result column="IMG" property="img" />
+        <result column="MOTTO" property="motto" />
+        <result column="IS_DY" property="isDy" />
+        <result column="STATUS" property="status" />
+        <result column="EDITPERSON_ID" property="editPersonId" />
+        <result column="CREATE_DATE" property="createDate" />
+        <result column="LAST_UPDATE_DATE" property="lastUpdateDate" />
+        <result column="IS_GS" property="isGs" />
+        <result column="GS_AREA" property="gsArea" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        USER_ID, LOGIN_ID, OP_ID, ORG_ID, NAME, TEL, AREA_ID3, AREA_NAME3, AREA_ID4, AREA_NAME4, AREA_ID5, AREA_NAME5, WDBH, WDMC, XTZHRYCODE, EML, RLBH, IMG, MOTTO, IS_DY, STATUS, EDITPERSON_ID, CREATE_DATE, LAST_UPDATE_DATE, IS_GS, GS_AREA
+    </sql>
+
+    <select id="getByUserCRMId" resultMap="BaseResultMap">
+        select *
+        from WG_USER_INFO u
+        where u.STATUS = '0'
+          and u.LOGIN_ID = #{userCRMId}
+    </select>
+
+</mapper>

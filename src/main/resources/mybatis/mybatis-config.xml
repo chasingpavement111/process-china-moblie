@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<settings>
+		<!-- 打印查询语句 -->
+		<setting name="logImpl" value="STDOUT_LOGGING" />
+		<setting name="cacheEnabled" value="true" />
+		<!--	允许待更新值为空-->
+		<setting name="jdbcTypeForNull" value="NULL"/>
+	</settings>
+	
+	<typeAliases>
+		<typeAlias alias="Integer" type="java.lang.Integer" />
+		<typeAlias alias="Long" type="java.lang.Long" />
+		<typeAlias alias="HashMap" type="java.util.HashMap" />
+		<typeAlias alias="LinkedHashMap" type="java.util.LinkedHashMap" />
+		<typeAlias alias="ArrayList" type="java.util.ArrayList" />
+		<typeAlias alias="LinkedList" type="java.util.LinkedList" />
+	</typeAliases>
+	
+	<plugins>
+		<plugin interceptor="com.ai.osd.server.datasource.interceptor.PagingSqlInterceptor">
+			<property name="interceptionRange" value=".*select.*" />
+		</plugin>
+
+		<!--<plugin interceptor="com.github.pagehelper.PageInterceptor">-->
+			<!--<property name="helperDialect" value="oracle"/>-->
+			<!--<property name="params" value="params=pageNum=pageNum;pageSize=pageSizeKey;"/>-->
+			<!--<property name="supportMethodsArguments" value="true"/>-->
+			<!--<property name="pageSizeZero" value="true"/>-->
+			<!--<property name="reasonable" value="true"/>-->
+		<!--</plugin>-->
+
+	</plugins>
+</configuration>

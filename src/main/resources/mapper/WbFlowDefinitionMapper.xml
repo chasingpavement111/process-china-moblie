@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinamobile.zj.flowProcess.mapper.WbFlowDefinitionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.chinamobile.zj.flowProcess.entity.WbFlowDefinition">
+        <id column="flow_uuid" property="flowUuid"/>
+        <result column="flow_definition_key" property="flowDefinitionKey"/>
+        <result column="flow_definition_version" property="flowDefinitionVersion"/>
+        <result column="json" property="json"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        flow_uuid
+        , flow_definition_key, flow_definition_version, json
+    </sql>
+
+    <select id="listByFlowDefinitionKey" resultMap="BaseResultMap">
+        select *
+        from wb_flow_definition
+        where flow_definition_key = #{flowDefinitionKey}
+        order by flow_definition_version desc <!--版本最新的排最前面-->
+    </select>
+
+</mapper>

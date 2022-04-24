@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinamobile.zj.hdict.mapper.HdictUserInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" extends="com.chinamobile.zj.mapper.user.WgUserInfoInCamelFormatMapper.BaseResultMap"
+               type="com.chinamobile.zj.hdict.entity.HdictUserInfoDO">
+        <result column="ROLE_ID" property="roleId"/>
+        <result column="ROLE_NAME" property="roleName"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        USER_ID
+        , LOGIN_ID, OP_ID, ORG_ID, NAME, TEL, AREA_ID3, AREA_NAME3, AREA_ID4, AREA_NAME4, AREA_ID5, AREA_NAME5, WDBH, WDMC, XTZHRYCODE, EML, RLBH, IMG, MOTTO, IS_DY, STATUS, EDITPERSON_ID, CREATE_DATE, LAST_UPDATE_DATE, IS_GS, GS_AREA
+    </sql>
+
+    <select id="getByUserCRMId" resultMap="BaseResultMap">
+        select t2.ROLE_ID, t2.ROLE_NAME, t1.*
+        from WG_USER_INFO t1
+                 inner join (select u1.LOGIN_ID, r1.ROLE_ID, r1.ROLE_NAME
+                             from WJJ_HDICT_USERROLE u1
+                                      inner join WJJ_HDICT_ROLE r1 on u1.ROLE_ID = r1.ROLE_ID
+                             where u1.LOGIN_ID = #{userCRMId}) t2 on t1.LOGIN_ID = t2.LOGIN_ID
+        where t1.STATUS = '0'
+    </select>
+
+    <select id="listByUserRoleId" resultMap="BaseResultMap">
+        select t2.ROLE_ID, t2.ROLE_NAME, t1.*
+        from WG_USER_INFO t1
+                 inner join (select u1.LOGIN_ID, r1.ROLE_ID, r1.ROLE_NAME
+                             from WJJ_HDICT_USERROLE u1
+                                      inner join WJJ_HDICT_ROLE r1 on u1.ROLE_ID = r1.ROLE_ID
+                             where r1.ROLE_ID = #{roleId}) t2 on t1.LOGIN_ID = t2.LOGIN_ID
+        where t1.STATUS = '0'
+          and t1.AREA_ID3 = #{areaId3}
+    </select>
+
+</mapper>

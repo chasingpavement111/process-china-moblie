@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinamobile.zj.flowProcess.mapper.WbFlowOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.chinamobile.zj.flowProcess.entity.WbFlowOrder">
+        <id column="order_uuid" property="orderUuid"/>
+        <result column="flow_definition_key" property="flowDefinitionKey"/>
+        <result column="flow_definition_version" property="flowDefinitionVersion"/>
+        <result column="create_time" property="createTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="input_variables" property="inputVariables"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="update_operator_id" property="updateOperatorId"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        order_uuid
+        , flow_definition_key, flow_definition_version, create_time, creator_id, input_variables, update_operator_id, update_time, status
+    </sql>
+
+    <insert id="insert">
+        insert into wb_flow_order(order_uuid, flow_definition_key, flow_definition_version, create_time, creator_id,
+                                  input_variables, update_operator_id, update_time, status)
+        values (#{entity.orderUuid},
+                #{entity.flowDefinitionKey},
+                #{entity.flowDefinitionVersion},
+                #{entity.createTime},
+                #{entity.creatorId},
+                #{entity.inputVariables},
+                #{entity.creatorId},
+                #{entity.createTime},
+                #{entity.status})
+    </insert>
+
+    <update id="updateOrderAfterFinishInstance">
+        update wb_flow_order o
+        set o.update_operator_id = #{entity.updateOperatorId},
+            o.update_time=#{entity.updateTime},
+            o.input_variables=#{entity.inputVariables}
+        where o.order_uuid = #{entity.orderUuid}
+    </update>
+
+    <select id="getByUuid" resultMap="BaseResultMap">
+        select *
+        from wb_flow_order o
+        where o.order_uuid = #{orderUuid}
+    </select>
+
+    <select id="getUnfinishedOrder" resultMap="BaseResultMap">
+        select *
+        from wb_flow_order o
+        where o.status in ('ready', 'processing') <!--todo zj 待工单启动机制完善，确定是否要包含ready状态-->
+    </select>
+
+</mapper>
