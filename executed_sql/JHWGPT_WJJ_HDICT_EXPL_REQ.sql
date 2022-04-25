@@ -1,0 +1,25 @@
+create table WJJ_HDICT_EXPL_REQ
+(
+    EXPL_REQ_ID      VARCHAR(30),
+    EXPL_POSITION_ID VARCHAR(30),
+    AREA_ID3         VARCHAR(30),
+    AREA_NAME3       VARCHAR(30),
+    AREA_ID4         VARCHAR(30),
+    AREA_NAME4       VARCHAR(30),
+    AREA_ID5         VARCHAR(30),
+    AREA_NAME5       VARCHAR(30),
+    SCENE_ADDRESS    VARCHAR(300),
+    EXPL_DATE        VARCHAR(20),
+    SCENE_INFO       VARCHAR(300),
+    MENJING_INFO     VARCHAR(300),
+    DOOR_INFO        VARCHAR(300),
+    WANGLUO_INFO     VARCHAR(300),
+    DIANYUAN_INFO    VARCHAR(300),
+    CREATE_DATE      DATE,
+    LINE_ID          VARCHAR(300),
+    STATUS           VARCHAR(300),
+    REQ_USER_ID      VARCHAR(300)
+)
+
+
+comment 'HDICT预勘申请';
