@@ -63,11 +63,10 @@
         select *
         from wb_flow_resource_instance r
         where r.order_uuid = #{orderUuid}
-        <!--        <if test="instanceStatus!=null and instanceStatus!=''">-->
-        <!--todo zj 直接不等于空字符串不就行了吗？？？？ -->
-        <if test="instanceStatus!=''">
+        <if test="instanceStatus!=null and instanceStatus!=''">
             and r.status = #{instanceStatus}
         </if>
+        order by r.create_time asc
     </select>
 
     <select id="getInstanceByInstanceUuid" resultMap="DetailedBaseResultMap">
@@ -83,6 +82,7 @@
         <foreach collection="orderUuidList" separator="," open="(" close=")" item="item">
             #{item}
         </foreach>
+        order by i.create_time asc
     </select>
 
 </mapper>

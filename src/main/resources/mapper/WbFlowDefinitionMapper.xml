@@ -20,7 +20,7 @@
         select *
         from wb_flow_definition
         where flow_definition_key = #{flowDefinitionKey}
-        order by flow_definition_version desc <!--版本最新的排最前面-->
+        order by flow_definition_key, flow_definition_version desc <!--版本最新的排最前面-->
     </select>
 
 </mapper>

@@ -8,11 +8,14 @@ import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowOrderService;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInstanceService;
+import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.service.interfaces.URIAccess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -35,6 +38,25 @@ public class WbFlowOrderController {
     @PostMapping(value = "/order/create")
     @URIAccess(menuName = "创建工单")
     public ResponseData createOrder(@Valid @RequestBody CreateFlowOrderDTO createOrderDTO) {
+        if (false) {
+            // 入参样例
+            String loginUserId = "chenyaoting";
+            createOrderDTO.setCreatorId(loginUserId);
+            createOrderDTO.setFlowDefinitionKey("check_install_process"); // 固定值。预勘流程的流程唯一标识
+            {
+                Map<String, Object> inputVariablesMap = new HashMap<>();
+                {
+                    // inputVariablesMap 入参设置样例。必须包含key=preCheckApplication, value的class类型为 PreCheckApplication.class 的元素。
+                    // 原因见 com.chinamobile.zj.hdict.entity.PreCheckApplication 注释
+                    // com.chinamobile.zj.hdict.entity.PreCheckApplication 哪些属性必填，见注解。
+                    PreCheckApplication preCheckApplication = new PreCheckApplication();
+                    preCheckApplication.setAreaId3("84");
+                    preCheckApplication.setCreatorId(loginUserId);
+                    inputVariablesMap.put("preCheckApplication", preCheckApplication);
+                }
+                createOrderDTO.setInputVariablesMap(inputVariablesMap);
+            }
+        }
         String orderUuid = orderService.create(createOrderDTO, true);
         return ResponseData.ok(orderUuid);
     }
@@ -60,6 +82,20 @@ public class WbFlowOrderController {
     @PostMapping(value = "/resource/instance/complete")
     @URIAccess(menuName = "完成步骤实例")
     public ResponseData completeInstance(@Valid @RequestBody CompleteResourceInputBO inputBO) {
+        if (false) {
+            // 入参样例
+            inputBO.setOrderUuid("954b9844-35fc-41db-a57e-235d1477db8c"); // orderUuid值
+            inputBO.setResourceInstanceUuid("b4a4db35-3767-4aac-a09b-25c1ff502a4c"); // resourceInstanceUuid值。操作步骤的实例唯一标识
+            String loginUserId = "chenyaoting";
+            inputBO.setOperatorId(loginUserId);
+            inputBO.setOperationSnapshot(null); // 是否必填，需要必填时传什么值，都以操作步骤的要求为准。
+            /*
+            operationSnapshot入参按不同步骤的具体要求（每个步骤对应一个class类，下面以步骤的具体执行顺序，进行说明）：
+            需注意：这里只列了最小入参集合，参数会被用户。可以填多余的参数，多填的参数会被存储但使用时忽略。
+            1、SubmitPreCheckApplicationUserTaskService：operationSnapshot==null
+            2、
+             */
+        }
         String resourceInstanceUuid = orderService.completeResourceInstance(inputBO);
         return ResponseData.ok(resourceInstanceUuid);
     }
@@ -67,12 +103,6 @@ public class WbFlowOrderController {
     @PostMapping(value = "/resource/instance/review")
     @URIAccess(menuName = "步骤实例进行审核")
     public ResponseData reviewInstance(@Valid @RequestBody ReviewResourceInputBO reviewResourceInputBO) {
-//        executionResourceInputBO.setOrderUuid();
-//        executionResourceInputBO.setResourceInstanceUuid();
-
-//        executionResourceInputBO.setOperatorId("wubiao1"); // loginUserId
-//        executionResourceInputBO.setOperationResult("passed");
-//        executionResourceInputBO.setOperationMessage("这是我的操作说明");
         String resourceInstanceUuid = orderService.reviewResourceInstance(reviewResourceInputBO);
         return ResponseData.ok(resourceInstanceUuid);
     }

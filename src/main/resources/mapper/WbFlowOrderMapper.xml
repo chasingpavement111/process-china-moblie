@@ -55,6 +55,7 @@
         select *
         from wb_flow_order o
         where o.status in ('ready', 'processing') <!--todo zj 待工单启动机制完善，确定是否要包含ready状态-->
+        order by o.create_time asc
     </select>
 
 </mapper>

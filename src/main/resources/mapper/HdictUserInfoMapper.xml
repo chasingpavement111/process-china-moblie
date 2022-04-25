@@ -34,6 +34,7 @@
                              where r1.ROLE_ID = #{roleId}) t2 on t1.LOGIN_ID = t2.LOGIN_ID
         where t1.STATUS = '0'
           and t1.AREA_ID3 = #{areaId3}
+        order by t1.LOGIN_ID desc
     </select>
 
 </mapper>
