@@ -28,7 +28,7 @@ public interface WbFlowResourceInstanceService extends IService<WbFlowResourceIn
 
     List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid);
 
-    BaseUserTaskService getResourceBeanByResourceDefinitionKey(String resourceDefinitionKey);
+    BaseUserTaskService getResourceInstanceBean(String resourceInstanceUuid);
 
     List<String> create(WbFlowOrderDO orderEntity);
 

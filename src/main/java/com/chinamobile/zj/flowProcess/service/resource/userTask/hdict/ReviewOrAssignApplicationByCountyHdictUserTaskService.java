@@ -1,5 +1,6 @@
 package com.chinamobile.zj.flowProcess.service.resource.userTask.hdict;
 
+import com.baomidou.mybatisplus.toolkit.CollectionUtils;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
@@ -15,10 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseUserTaskService implements LimitOperatorRole {
 
@@ -27,6 +25,9 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 
     @InputParam
     private PreCheckApplication preCheckApplication;
+
+    @OutputParam
+    private Boolean hasCountyManager;
 
     /**
      * 县HDICT专员转派的家客经理的用户ID
@@ -67,8 +68,8 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
         checkOperatorAccessRight();
 
         // 必须设置 hasCountyManager，否则流程走向无法判断
-//        List<HdictUserInfoDO> jiaKeManagerInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
-//        setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
+        List<HdictUserInfoDO> jiaKeManagerInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
+        setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
 
         // 检查用户指定的家客经理：角色、归属县市
         Optional<HdictUserInfoDO> jiaKeManagerInfoOpt = userInfoService.getByUserCRMId(assignedJiaKeCountyManagerId);
@@ -102,13 +103,16 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 
     @Override
     public String getOperationOutputDesc() {
-        if (Objects.nonNull(assignedJiaKeCountyManagerId)) {
+        if (Objects.nonNull(assignedJiaKeCountyManagerId) || BooleanUtils.isTrue(hasCountyManager)) {
             return MessageFormat.format("{0}（{1}）将预勘需求指派给{2}（{3}）进行审核",
                     getOperatorRoleName(), getOperatorName(),
                     "家客经理-县市", getAssignedJiaKeCountyManagerName());
         } else {
+            // 步骤未结束时，status==null
+            String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
+                    OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
             return MessageFormat.format("{0}（{1}）对预勘需求审核{2}",
-                    getOperatorRoleName(), getOperatorName(), OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh());
+                    getOperatorRoleName(), getOperatorName(), operationStatus);
         }
     }
 
@@ -118,6 +122,14 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 
     public void setPreCheckApplication(PreCheckApplication preCheckApplication) {
         this.preCheckApplication = preCheckApplication;
+    }
+
+    public Boolean getHasCountyManager() {
+        return hasCountyManager;
+    }
+
+    public void setHasCountyManager(Boolean hasCountyManager) {
+        this.hasCountyManager = hasCountyManager;
     }
 
     public String getAssignedJiaKeCountyManagerId() {

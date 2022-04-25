@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class BaseUserTaskService extends BaseResourceService implements MultipleNextOutGoing {
 
@@ -94,6 +95,9 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
     }
 
     public String getOperatorName() {
+        if (StringUtils.isBlank(operatorName)) {
+            return ""; // 避免方法输出内容包含null:com.chinamobile.zj.flowProcess.service.resource.userTask.hdict.ReviewOrAssignApplicationByCountyHdictUserTaskService.getOperationOutputDesc
+        }
         return operatorName;
     }
 
@@ -106,6 +110,10 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
     }
 
     public String getOperatorRoleName() {
+        if (StringUtils.isBlank(operatorRoleName)) {
+            String roleNameStr = supportedOperatorRoleMap().values().stream().collect(Collectors.joining("/"));
+            return roleNameStr; // 避免方法输出内容包含null:com.chinamobile.zj.flowProcess.service.resource.userTask.hdict.ReviewOrAssignApplicationByCountyHdictUserTaskService.getOperationOutputDesc
+        }
         return operatorRoleName;
     }
 

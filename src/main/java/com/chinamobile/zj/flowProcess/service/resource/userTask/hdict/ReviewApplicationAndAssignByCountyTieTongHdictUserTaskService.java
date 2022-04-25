@@ -10,6 +10,7 @@ import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
 import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.MessageFormat;
@@ -51,8 +52,10 @@ public class ReviewApplicationAndAssignByCountyTieTongHdictUserTaskService exten
 
     @Override
     public String getOperationOutputDesc() {
-        return MessageFormat.format("{0}（{1}）对预勘需求申请{2}", getOperatorRoleName(), getOperatorName(),
-                OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh());
+        // 步骤未结束时，status==null
+        String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
+                OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
+        return MessageFormat.format("{0}（{1}）对预勘需求申请进行审核与派单{2}", getOperatorRoleName(), getOperatorName(), operationStatus);
     }
 
     @Override

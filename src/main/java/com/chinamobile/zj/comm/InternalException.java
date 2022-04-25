@@ -1,12 +1,14 @@
 package com.chinamobile.zj.comm;
 
-import java.text.MessageFormat;
-
 // todo zj git 需要新增该文件
 public class InternalException extends GlobalException {
 
     public InternalException(Throwable cause) {
         super(ResponseEnum.SERVER_ERROR_CODE.getMsg(), ResponseEnum.SERVER_ERROR_CODE.getCode(), cause);
+    }
+
+    public InternalException(String message, Throwable cause) {
+        super(message, ResponseEnum.SERVER_ERROR_CODE.getCode(), cause);
     }
 
     public InternalException(String message) {

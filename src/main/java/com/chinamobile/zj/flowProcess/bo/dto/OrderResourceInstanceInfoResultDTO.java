@@ -7,7 +7,7 @@ public class OrderResourceInstanceInfoResultDTO {
 
     private String resourceInstanceUuid;
 
-    private String resourceDefinitionKey;
+    private String flowResourceDefinitionKey;
 
     /**
      * 操作人CRM编号

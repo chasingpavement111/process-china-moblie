@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -162,16 +163,24 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         instanceEntityList.forEach(entity -> {
             OrderResourceInstanceInfoResultDTO dto = new OrderResourceInstanceInfoResultDTO();
             BeanUtils.copyProperties(entity, dto);
-            BaseUserTaskService userTaskService = getResourceBeanByResourceDefinitionKey(entity.getFlowResourceDefinitionKey());
+            BaseUserTaskService userTaskService = getResourceInstanceBean(entity.getResourceInstanceUuid());
             dto.setOperationOutputDesc(userTaskService.getOperationOutputDesc());
             instanceDTOList.add(dto);
         });
         return instanceDTOList;
     }
 
-    public BaseUserTaskService getResourceBeanByResourceDefinitionKey(String flowResourceDefinitionKey) {
+    public BaseUserTaskService getResourceInstanceBean(String resourceInstanceUuid) {
         // todo zj instanceDTO --获取实例-> userTask
-        return null;
+        String instanceBeanName = "instanceUuid-" + resourceInstanceUuid;
+        try {
+            BaseUserTaskService userTaskService = context.getBean(instanceBeanName, BaseUserTaskService.class);
+            return userTaskService;
+        } catch (NoSuchBeanDefinitionException ex) {
+            // bean丟失，重启下服务，重启时项目主动注入。若还是找不到，需排查代码逻辑
+            String msg = String.format("BaseUserTaskService bean of instance[instanceUuid=%s] not found! Please contact the administrator!", resourceInstanceUuid);
+            throw new InternalException(msg, ex);
+        }
     }
 
     private List<ResourceDefinitionBO> getStartingUserTaskResource(WbFlowOrderDO orderEntity, Map<String, Object> inputVariablesMap) {

@@ -14,6 +14,7 @@ import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowDefinition;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO;
+import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.OrderStatusEnum;
 import com.chinamobile.zj.flowProcess.mapper.WbFlowOrderMapper;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowDefinitionService;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -136,9 +138,16 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
         List<OrderResourceInstanceInfoResultDTO> instanceList = instanceService.getExecutionHistoryByOrderUuid(orderUuid);
         resultDTO.setInstanceExecutionHistory(instanceList);
         if (instanceList.size() > 0) {
-            OrderResourceInstanceInfoResultDTO instanceDTO = instanceList.get(instanceList.size() - 1);
-            BaseUserTaskService userTaskServiceBean = instanceService.getResourceBeanByResourceDefinitionKey(instanceDTO.getResourceDefinitionKey());
-            resultDTO.setCurrentOperatorRoleList(new ArrayList<>(userTaskServiceBean.supportedOperatorRoleMap().values()));
+            List<OrderResourceInstanceInfoResultDTO> unfinishedInstanceList = instanceList.stream()
+                    .filter(instanceDTO -> OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(instanceDTO.getStatus())) // todo zj 待区别 ready、processing,, 还是应该只过了出processing状态的步骤实例
+                    .collect(Collectors.toList());
+            List<String> roleNameList = new ArrayList<>();
+            unfinishedInstanceList.forEach(instanceDTO -> {
+                BaseUserTaskService userTaskServiceBean = instanceService.getResourceInstanceBean(instanceDTO.getResourceInstanceUuid());
+                List<String> instanceRoleNameList = new ArrayList<>(userTaskServiceBean.supportedOperatorRoleMap().values());
+                roleNameList.addAll(instanceRoleNameList);
+            });
+            resultDTO.setCurrentOperatorRoleList(roleNameList);
         }
         return resultDTO;
     }
