@@ -1,12 +1,11 @@
 package com.chinamobile.zj.flowProcess.service.resource;
 
 import com.chinamobile.zj.comm.InternalException;
-import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
-import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.bo.definition.ResourceDefinitionBO;
+import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.enums.StencilEnum;
-import com.chinamobile.zj.util.JsonConvertUtil;
+import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,7 +138,13 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
     }
 
     public void setOperationSnapshot(String operationSnapshot) {
+        if (StringUtils.isBlank(operationSnapshot)) {
+            return;
+        }
         this.operationSnapshot = operationSnapshot;
+//        BaseUserTaskService tempSource = JsonConvertUtil.parseToObject(operationSnapshot, getClass()); // 类需要实现fastJson序列化的，必须定义setter\getter
+//        BeanUtils.copyProperties(tempSource, this); // todo zj 好像不需要 外部代码已实现赋值
+//        System.out.println(1);
     }
 
     /**
@@ -148,10 +153,11 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
     public abstract String getOperationOutputDesc();
 
     /**
+     * <roleId, roleName>
      * 步骤的操作人角色，可能支持多种用户角色
      * 若元素数量为0的集合对象 -> 标识支持所有类型的用户
      */
-    public abstract List<String> supportedOperatorRoleList();
+    public abstract Map<String, String> supportedOperatorRoleMap();
 
     /**
      * 只返回具体类中声明的成员变量

@@ -1,8 +1,8 @@
 package com.chinamobile.zj.flowProcess.mapper;
 
-import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
 import com.baomidou.mybatisplus.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
+import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
+import com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public interface WbFlowOrderMapper extends BaseMapper<WbFlowOrder> {
     @Override
     Integer insert(@Param("entity") WbFlowOrder wbFlowOrder);
 
-    WbFlowOrder getByUuid(@Param("orderUuid") String orderUuid);
+    WbFlowOrderDO getByUuid(@Param("orderUuid") String orderUuid);
 
     int updateOrderAfterFinishInstance(@Param("entity") WbFlowOrder updateOrderEntity);
 

@@ -6,6 +6,7 @@ import com.chinamobile.zj.flowProcess.bo.dto.OrderResourceInstanceInfoResultDTO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
+import com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstance;
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
 
@@ -23,13 +24,13 @@ public interface WbFlowResourceInstanceService extends IService<WbFlowResourceIn
 
     void injectBeans(List<WbFlowOrder> orderEntityList);
 
-    FinishResourceResultDTO complete(WbFlowOrder orderEntity, CompleteResourceInputBO inputBO);
+    FinishResourceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO);
 
     List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid);
 
     BaseUserTaskService getResourceBeanByResourceDefinitionKey(String resourceDefinitionKey);
 
-    List<String> create(WbFlowOrder orderEntity);
+    List<String> create(WbFlowOrderDO orderEntity);
 
-    String review(WbFlowOrder orderEntity, ReviewResourceInputBO inputBO);
+    String review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO);
 }

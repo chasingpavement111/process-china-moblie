@@ -12,11 +12,13 @@ import com.chinamobile.zj.flowProcess.bo.dto.OrderResourceInstanceInfoResultDTO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
+import com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstance;
 import com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstanceDO;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.StencilEnum;
 import com.chinamobile.zj.flowProcess.mapper.WbFlowResourceInstanceMapper;
+import com.chinamobile.zj.flowProcess.service.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInstanceService;
 import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
 import com.chinamobile.zj.flowProcess.service.definition.FlowService;
@@ -35,9 +37,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,8 +66,14 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
     @Resource(name = "flowDefinitionServiceMap")
     private Map<String, FlowDefinitionResourceService> flowDefinitionServiceMap;
 
-    @Resource(name = "userTaskServiceMap")
-    private Map<String, BaseUserTaskService> userTaskServiceMap;
+//    @Resource(name = "userTaskServiceMap")
+//    private Map<String, BaseUserTaskService> userTaskServiceMap;
+
+    @Resource(name = "userTaskServiceClassMap")
+    private Map<String, Class<? extends BaseUserTaskService>> userTaskServiceClassMap;
+
+    @Autowired
+    private BaseStartNoneEventService startNoneEventService;
 
     @Override
     public void injectBeans(List<WbFlowOrder> orderEntityList) {
@@ -79,7 +85,9 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         Map<String, List<WbFlowResourceInstance>> orderUuidToInstanceEntityList = instanceEntityList.stream().collect(Collectors.groupingBy(WbFlowResourceInstance::getOrderUuid));
         orderUuidToInstanceEntityList.forEach((orderUuid, subInstanceEntityList) -> {
             subInstanceEntityList.forEach(instanceEntity -> {
-                createAndInjectUserTaskServiceBean(orderUuid, instanceEntity.getInputVariables(), Collections.singletonList(instanceEntity));
+                // 若步骤未执行结束，outputVariables为空。只能通过入参inputVariables进行初始化。否则应根据outputVariables, 因为包含了所有信息
+                String variablesStr = StringUtils.isNotBlank(instanceEntity.getOutputVariables()) ? instanceEntity.getOutputVariables() : instanceEntity.getInputVariables();
+                createAndInjectUserTaskServiceBean(orderUuid, variablesStr, Collections.singletonList(instanceEntity));
             });
         });
     }
@@ -93,24 +101,31 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
 
     @Transactional
     @Override
-    public FinishResourceResultDTO complete(WbFlowOrder orderEntity, CompleteResourceInputBO inputBO) {
+    public FinishResourceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO) {
         Optional<WgUserInfo> userInfoEntityOpt = userInfoService.getByUserCRMId(inputBO.getOperatorId());
         ParamException.isTrue(BooleanUtils.isNotTrue(userInfoEntityOpt.isPresent()),
                 String.format("invalid operatorId: [%s], user not found!", inputBO.getOperatorId()));
         String instanceUuid = inputBO.getResourceInstanceUuid();
         WbFlowResourceInstanceDO processingInstanceEntity = getInstanceByInstanceUuid(instanceUuid);
-        ParamException.isTrue(BooleanUtils.isNotTrue(OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(processingInstanceEntity.getStatus())),
-                String.format("instance[instanceUuid=%s] status is [%s], only in [processing] status allowed to be completed",
-                        processingInstanceEntity.getResourceInstanceUuid(), processingInstanceEntity.getStatus()));
+//        ParamException.isTrue(BooleanUtils.isNotTrue(OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(processingInstanceEntity.getStatus())),
+//                String.format("instance[instanceUuid=%s] status is [%s], only in [processing] status allowed to be completed",
+//                        processingInstanceEntity.getResourceInstanceUuid(), processingInstanceEntity.getStatus())); todo zj 待解除注释
         // complete -> status
 
         BaseUserTaskService concreteUserTaskService = context.getBean("instanceUuid-" + processingInstanceEntity.getResourceInstanceUuid(), BaseUserTaskService.class);
-        BeanUtils.copyProperties(inputBO, concreteUserTaskService); // todo zj 是否可用直接覆盖
+//        BeanUtils.copyProperties(inputBO, concreteUserTaskService); // todo zj 是否可用直接覆盖。换成一个一个属性地赋值
+        concreteUserTaskService.setOperatorId(inputBO.getOperatorId());
+        concreteUserTaskService.setOperationSnapshot(inputBO.getOperationSnapshot());
         /**
          *
          */
+        if (concreteUserTaskService instanceof LimitOperatorRole) {
+            // 若限制操作人权限，则需要做权限校验
+            ((LimitOperatorRole) concreteUserTaskService).checkOperatorAccessRight();
+        }
         ExecutionResult executionResult = concreteUserTaskService.execute(); // 异常直接抛出 todo zj 返回结果作用？
         concreteUserTaskService.setOperationResult(OrderInstanceStatusEnum.FINISHED.getNameEn());
+
         updateAfterExecution(instanceUuid, concreteUserTaskService);
 
         // update variables to order 方法返回到order后进行
@@ -159,7 +174,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         return null;
     }
 
-    private List<ResourceDefinitionBO> getStartingUserTaskResource(WbFlowOrder orderEntity, Map<String, Object> inputVariablesMap) {
+    private List<ResourceDefinitionBO> getStartingUserTaskResource(WbFlowOrderDO orderEntity, Map<String, Object> inputVariablesMap) {
         ParamException.isTrue(Objects.isNull(orderEntity), "inputParam[orderEntity] should not be null!");
 
         String flowDefinitionKey = orderEntity.getFlowDefinitionKey();
@@ -173,15 +188,15 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
                 .findFirst()
                 // 流程定义有误。必须定义起始节点
                 .orElseThrow(() -> new InternalException(String.format("flow doesn't have any startNoneEvent! Please contact the administrator to check flow definition![flowDefinitionKey=%s]", flowDefinitionKey)));
-        BaseStartNoneEventService resourceService = (BaseStartNoneEventService) userTaskServiceMap.get(StencilEnum.START_NONE_EVENT.getId());
-        List<ResourceDefinitionBO> resourceDefinitionBOList = resourceService.getNextOutGoingExecutionResource(startNoneEventResourceBO, inputVariablesMap);
+//        BaseStartNoneEventService resourceService = userTaskServiceMap.get(StencilEnum.START_NONE_EVENT.getId()); todo zj
+        List<ResourceDefinitionBO> resourceDefinitionBOList = startNoneEventService.getNextOutGoingExecutionResource(startNoneEventResourceBO, inputVariablesMap);
 
         return resourceDefinitionBOList;
 
 
     }
 
-    private List<ResourceDefinitionBO> getNextOutGoingExecutionResource(WbFlowOrder orderEntity, WbFlowResourceInstanceDO resourceInstanceDO, Map<String, Object> inputVariablesMap) {
+    private List<ResourceDefinitionBO> getNextOutGoingExecutionResource(WbFlowOrderDO orderEntity, WbFlowResourceInstanceDO resourceInstanceDO, Map<String, Object> inputVariablesMap) {
         ParamException.isTrue(Objects.isNull(orderEntity), "inputParam[orderEntity] should not be null!");
         ParamException.isTrue(Objects.isNull(resourceInstanceDO), "inputParam[resourceInstanceDO] should not be null!");
 
@@ -199,7 +214,6 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
                 .findFirst()
                 // 流程定义有误，指定流程中找不到指定的步骤。可能：创建流程工单后、完成流程工单前，流程定义的步骤key有修改、或被删除。
                 .orElseThrow(() -> new InternalException(String.format("flow[flowDefinitionKey=%s] doesn't have the resource[resourceDefinitionKey=%s]! Please contact the administrator to check flow definition!", flowDefinitionKey, resourceDefinitionKey)));
-//        userTaskServiceMap.get(resourceDefinitionKey);
         BaseUserTaskService resourceService = context.getBean("instanceUuid-" + resourceInstanceDO.getResourceInstanceUuid(), BaseUserTaskService.class);
         List<ResourceDefinitionBO> resourceDefinitionBOList = resourceService.getNextOutGoingExecutionResource(userTaskResourceBO, inputVariablesMap);
 
@@ -208,29 +222,22 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
 
     @Transactional
     @Override
-    public List<String> create(WbFlowOrder orderEntity) {
-        ParamException.isTrue(Objects.isNull(orderEntity), "inputParam[orderEntity] should not be null!");
-        ParamException.isTrue(StringUtils.isBlank(orderEntity.getOrderUuid()), "inputParam[orderUuid.orderUuid] should not be blank!");
+    public List<String> create(WbFlowOrderDO orderEntityDO) {
+        ParamException.isTrue(Objects.isNull(orderEntityDO), "inputParam[orderEntityDO] should not be null!");
+        ParamException.isTrue(StringUtils.isBlank(orderEntityDO.getOrderUuid()), "inputParam[orderEntityDO.orderUuid] should not be blank!");
 
 
-        Map<String, Object> inputVariablesMap = JsonConvertUtil.parseToParameterizedType(orderEntity.getInputVariables(), new TypeReference<Map<String, Object>>() {
-        });
-        {
-            // todo zj 待对接王俊杰：业务service中要做的事情
-            if (inputVariablesMap == null) {
-                inputVariablesMap = new HashMap<>();
-            }
-            inputVariablesMap.put("areaId3", "84");
-        }
+//        Map<String, Object> inputVariablesMap = JsonConvertUtil.parseToParameterizedType(orderEntityDO.getInputVariables(), new TypeReference<Map<String, Object>>() {
+//        }); todo zj 待删除
 
-        List<ResourceDefinitionBO> resourceDefinitionBOList = getStartingUserTaskResource(orderEntity, inputVariablesMap);
-        List<String> uuidListOfOutGoingInstanceEntity = createOutGoings(orderEntity, null, resourceDefinitionBOList, inputVariablesMap);
+        List<ResourceDefinitionBO> resourceDefinitionBOList = getStartingUserTaskResource(orderEntityDO, orderEntityDO.getInputVariablesMap());
+        List<String> uuidListOfOutGoingInstanceEntity = createOutGoings(orderEntityDO, null, resourceDefinitionBOList, orderEntityDO.getInputVariablesMap());
 
         return uuidListOfOutGoingInstanceEntity;
     }
 
     @Override
-    public String review(WbFlowOrder orderEntity, ReviewResourceInputBO inputBO) {
+    public String review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO) {
         return null;// todo zj
     }
 
@@ -243,7 +250,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
      * @param inputVariablesMap                当前执行完成的userTask实例的执行结果出参
      * @return 下一跳或多跳的待执行userTask的instanceUuid集合
      */
-    private List<String> createOutGoings(WbFlowOrder orderEntity, String resourceInstanceUuid, List<ResourceDefinitionBO> outGoingResourceDefinitionBOList, Map<String, Object> inputVariablesMap) {
+    private List<String> createOutGoings(WbFlowOrderDO orderEntity, String resourceInstanceUuid, List<ResourceDefinitionBO> outGoingResourceDefinitionBOList, Map<String, Object> inputVariablesMap) {
         String orderUuid = orderEntity.getOrderUuid();
         List<WbFlowResourceInstance> outGoingInstanceEntity = new ArrayList<>();
 
@@ -299,16 +306,18 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
 
     private List<WbFlowResourceInstanceDO> getInstanceByOrderUuid(String orderUuid, OrderInstanceStatusEnum instanceStatusEnum) {
         ParamException.isTrue(StringUtils.isBlank(orderUuid), "inputParam[orderUuid] should not be blank!");
-        List<WbFlowResourceInstanceDO> instanceEntityList = instanceMapper.getInstanceByOrderUuid(orderUuid, instanceStatusEnum.getNameEn());
+        List<WbFlowResourceInstanceDO> instanceEntityList = instanceMapper.getInstanceByOrderUuid(orderUuid,
+                Objects.isNull(instanceStatusEnum) ? null : instanceStatusEnum.getNameEn());
         InternalException.isTrue(CollectionUtils.isEmpty(instanceEntityList), // 可能原因：代码逻辑问题。一个工单下存在至少一个步骤
-                String.format("order[orderUuid=%s] should have at lease one resource instance, Please contact the administrator to check DB!", orderUuid));
+                String.format("order[orderUuid=%s] should have at lease one resource instance, but found none! Please contact the administrator to check DB!", orderUuid));
         return instanceEntityList;
     }
 
     private WbFlowResourceInstanceDO getInstanceByInstanceUuid(String resourceInstanceUuid) {
         ParamException.isTrue(StringUtils.isBlank(resourceInstanceUuid), "inputParam[resourceInstanceUuid] should not be blank!");
         WbFlowResourceInstanceDO instanceEntity = instanceMapper.getInstanceByInstanceUuid(resourceInstanceUuid);
-        ParamException.isTrue(Objects.isNull(instanceEntity), "invalid resourceInstanceUuid=[%s], instanceEntity not found!");
+        ParamException.isTrue(Objects.isNull(instanceEntity),
+                String.format("invalid resourceInstanceUuid=[%s], instanceEntity not found!", resourceInstanceUuid));
         return instanceEntity;
     }
 
@@ -321,15 +330,16 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
      */
     private void createAndInjectUserTaskServiceBean(String orderUuid, String inputVariablesStr, List<WbFlowResourceInstance> outGoingInstanceEntity) {
         outGoingInstanceEntity.forEach(instanceEntity -> {
-            BaseUserTaskService userTaskService = userTaskServiceMap.get(instanceEntity.getFlowResourceDefinitionKey());
-            BaseUserTaskService concreteUserTaskService = JsonConvertUtil.parseToObject(inputVariablesStr, userTaskService.getClass());
+            Class<? extends BaseUserTaskService> clazz = userTaskServiceClassMap.get(instanceEntity.getFlowResourceDefinitionKey());
+            BaseUserTaskService concreteUserTaskService = JsonConvertUtil.parseToObject(inputVariablesStr, clazz);
             if (Objects.isNull(concreteUserTaskService)) {
                 try {
-                    concreteUserTaskService = userTaskService.getClass().newInstance();
+                    concreteUserTaskService = clazz.newInstance();
                 } catch (InstantiationException | IllegalAccessException ex) {
                     throw new InternalException(ex);
                 }
             }
+            concreteUserTaskService.setOperationSnapshot(inputVariablesStr);
 
             // 获取动态注册的bean
             FlowService flowService = context.getBean("orderUuid-" + orderUuid, FlowService.class);

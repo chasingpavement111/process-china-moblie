@@ -13,8 +13,8 @@ import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowDefinition;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
+import com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO;
 import com.chinamobile.zj.flowProcess.enums.OrderStatusEnum;
-import com.chinamobile.zj.flowProcess.enums.StencilEnum;
 import com.chinamobile.zj.flowProcess.mapper.WbFlowOrderMapper;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowDefinitionService;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowOrderService;
@@ -26,6 +26,7 @@ import com.chinamobile.zj.service.interfaces.user.WgUserInfoService;
 import com.chinamobile.zj.util.DateUtil;
 import com.chinamobile.zj.util.JsonConvertUtil;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -70,9 +71,6 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
     @Resource(name = "flowDefinitionServiceMap")
     private Map<String, FlowDefinitionResourceService> flowDefinitionServiceMap;
 
-    @Resource(name = "userTaskServiceMap")
-    private Map<String, BaseUserTaskService> userTaskServiceMap;
-
     /**
      * 服务重启后，手动注入的bean丢失。需手动重新注入
      * 所有未结束工单的flowService\BaseUserTaskService
@@ -103,24 +101,29 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
                 String.format("invalid creatorId: [%s], user not found!", createOrderDTO.getCreatorId()));
 
         // 创建总工单
-        WbFlowOrder orderEntity = new WbFlowOrder();
-        BeanUtils.copyProperties(createOrderDTO, orderEntity);
+        WbFlowOrderDO orderEntityDO = new WbFlowOrderDO();
+        BeanUtils.copyProperties(createOrderDTO, orderEntityDO);
 
-        orderEntity.setOrderUuid(UUID.randomUUID().toString());
-        orderEntity.setCreateTime(DateUtil.format(new Date(), DateUtil.DATE_TIME_REGEX));
-        orderEntity.setStatus(OrderStatusEnum.READY.getNameEn());
+        orderEntityDO.setOrderUuid(UUID.randomUUID().toString());
+        orderEntityDO.setCreateTime(DateUtil.format(new Date(), DateUtil.DATE_TIME_REGEX));
+        orderEntityDO.setStatus(OrderStatusEnum.READY.getNameEn());
 
         WbFlowDefinition flowDefinitionEntity = definitionService.getNewestByFlowDefinitionKey(createOrderDTO.getFlowDefinitionKey());
-        orderEntity.setFlowDefinitionVersion(flowDefinitionEntity.getFlowDefinitionVersion());
+        orderEntityDO.setFlowDefinitionVersion(flowDefinitionEntity.getFlowDefinitionVersion());
 
-        orderMapper.insert(orderEntity);
+        if (MapUtils.isEmpty(orderEntityDO.getInputVariablesMap())) {
+            // 避免影响后面代码的NPE报错。要求入参非空，自己内部设置好了，不对外部输入做非空限制
+            orderEntityDO.setInputVariablesMap(Collections.EMPTY_MAP);
+        }
 
-        createFlowServiceBean(orderEntity); // todo zj 下面代码若报错，则删除
+        orderMapper.insert(orderEntityDO);
+
+        createFlowServiceBean(orderEntityDO); // todo zj 下面代码若报错，则删除
 
         // 创建流程节点
-        instanceService.create(orderEntity);
+        instanceService.create(orderEntityDO);
 
-        return orderEntity.getOrderUuid();
+        return orderEntityDO.getOrderUuid();
     }
 
     @Override
@@ -135,17 +138,18 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
         if (instanceList.size() > 0) {
             OrderResourceInstanceInfoResultDTO instanceDTO = instanceList.get(instanceList.size() - 1);
             BaseUserTaskService userTaskServiceBean = instanceService.getResourceBeanByResourceDefinitionKey(instanceDTO.getResourceDefinitionKey());
-            resultDTO.setCurrentOperatorRoleList(userTaskServiceBean.supportedOperatorRoleList());
+            resultDTO.setCurrentOperatorRoleList(new ArrayList<>(userTaskServiceBean.supportedOperatorRoleMap().values()));
         }
         return resultDTO;
     }
 
+    @Transactional
     @Override
     public String completeResourceInstance(CompleteResourceInputBO inputBO) {
         ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
-        WbFlowOrder orderEntity = getByUuid(inputBO.getOrderUuid());
-        FinishResourceResultDTO resultDTO = instanceService.complete(orderEntity, inputBO);
-        updateOrderAfterFinishInstance(orderEntity, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap());
+        WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
+        FinishResourceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO);
+        updateOrderAfterFinishInstance(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap());
         // todo zj 工单结束
         return resultDTO.getInstanceUuid();
     }
@@ -153,8 +157,8 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
     @Override
     public String reviewResourceInstance(ReviewResourceInputBO inputBO) {
         ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
-        WbFlowOrder orderEntity = getByUuid(inputBO.getOrderUuid());
-        return instanceService.review(orderEntity, inputBO);
+        WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
+        return instanceService.review(orderEntityDO, inputBO);
     }
 
     private void updateOrderAfterFinishInstance(WbFlowOrder orderEntity, String operatorId, Map<String, Object> outputVariablesMapOfInstance) {
@@ -172,9 +176,9 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
                 String.format("updateCount=[%s], should be number [1]. please contact the administrator", updateCount));
     }
 
-    private WbFlowOrder getByUuid(String orderUuid) {
+    private WbFlowOrderDO getByUuid(String orderUuid) {
         ParamException.isTrue(StringUtils.isBlank(orderUuid), "inputParam[orderUuid] should not be blank!");
-        WbFlowOrder entity = orderMapper.getByUuid(orderUuid);
+        WbFlowOrderDO entity = orderMapper.getByUuid(orderUuid);
         ParamException.isTrue(Objects.isNull(entity),
                 String.format("invalid orderUuid: [%s], order not found!", orderUuid));
         return entity;

@@ -3,6 +3,8 @@
 <mapper namespace="com.chinamobile.zj.flowProcess.mapper.WbFlowOrderMapper">
 
     <!-- 通用查询映射结果 -->
+    <resultMap id="DetailBaseResultMap" extends="BaseResultMap" type="com.chinamobile.zj.flowProcess.entity.WbFlowOrderDO"/>
+
     <resultMap id="BaseResultMap" type="com.chinamobile.zj.flowProcess.entity.WbFlowOrder">
         <id column="order_uuid" property="orderUuid"/>
         <result column="flow_definition_key" property="flowDefinitionKey"/>
@@ -43,7 +45,7 @@
         where o.order_uuid = #{entity.orderUuid}
     </update>
 
-    <select id="getByUuid" resultMap="BaseResultMap">
+    <select id="getByUuid" resultMap="DetailBaseResultMap">
         select *
         from wb_flow_order o
         where o.order_uuid = #{orderUuid}

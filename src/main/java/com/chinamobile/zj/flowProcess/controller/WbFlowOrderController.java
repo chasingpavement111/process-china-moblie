@@ -2,10 +2,10 @@ package com.chinamobile.zj.flowProcess.controller;
 
 
 import com.chinamobile.zj.comm.ResponseData;
-import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
-import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.dto.CreateFlowOrderDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.OrderInfoResultDTO;
+import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
+import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowOrderService;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInstanceService;
 import com.chinamobile.zj.service.interfaces.URIAccess;
@@ -42,10 +42,6 @@ public class WbFlowOrderController {
     @GetMapping(value = "/order/info")
     @URIAccess(menuName = "查询单个工单")
     public ResponseData orderInfo(@RequestParam String orderUuid) {
-//        CreateFlowOrderDTO createOrderDTO  = new CreateFlowOrderDTO();
-//        createOrderDTO.setFlowDefinitionKey("check_install_process");
-//        createOrderDTO.setInputVariables(null);
-//        createOrderDTO.setCreatorId("wubiao1"); // loginUserId
         OrderInfoResultDTO info = orderService.info(orderUuid);
         return ResponseData.ok(info);
     }
