@@ -3,13 +3,16 @@ package com.chinamobile.zj.flowProcess.service.resource.userTask.hdict;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
+import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
 import com.chinamobile.zj.flowProcess.service.InputParam;
 import com.chinamobile.zj.flowProcess.service.LimitOperatorRole;
+import com.chinamobile.zj.flowProcess.service.OutputParam;
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
 import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
 import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.MessageFormat;
@@ -31,7 +34,7 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
     @InputParam
     private String assignedJiaKeCountyManagerId;
 
-    @InputParam
+    @OutputParam
     private Boolean preCheckApplicationPassedByWhiteCollar;
 
     @Override
@@ -46,6 +49,8 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
 
     @Override
     public ExecutionResult execute() {
+        ReviewOperationResultEnum.getByNameEn(getOperationResult()); // 检查必须经过审核
+        preCheckApplicationPassedByWhiteCollar = ReviewOperationResultEnum.PASSED.getNameEn().equals(getOperationResult());
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
     }
 
@@ -56,8 +61,11 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
 
     @Override
     public String getOperationOutputDesc() {
+        // 步骤未结束时，status==null
+        String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
+                OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
         return MessageFormat.format("{0}（{1}）对预勘需求申请{2}", getOperatorRoleName(), getOperatorName(),
-                OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh());
+                operationStatus);
     }
 
     @Override

@@ -59,6 +59,16 @@
         where r.resource_instance_uuid = #{entity.resourceInstanceUuid}
     </update>
 
+    <update id="invalidateInstance">
+        update wb_flow_resource_instance r
+        set r.valid = false
+        <!--set r.valid = '0'-->
+        where r.resource_instance_uuid in
+        <foreach collection="instanceUuidList" separator="," open="(" close=")" item="item">
+            #{item}
+        </foreach>
+    </update>
+
     <select id="getInstanceByOrderUuid" resultMap="DetailedBaseResultMap">
         select *
         from wb_flow_resource_instance r
@@ -75,7 +85,7 @@
         where r.resource_instance_uuid = #{resourceInstanceUuid}
     </select>
 
-    <select id="getInstanceByOrderUuidList" resultMap="BaseResultMap">
+    <select id="getInstanceByOrderUuidList" resultMap="DetailedBaseResultMap">
         select *
         from wb_flow_resource_instance i
         where i.order_uuid in

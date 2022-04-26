@@ -16,7 +16,7 @@ public class BaseExclusiveGatewayService extends BaseResourceService {
 
     public ResourceDefinitionBO getDirectNextOutGoingResource(ResourceDefinitionBO exclusiveGatewayResourceDefinitionBO, Map<String, Object> outputVariablesMap) {
         ResourceDefinitionBO finalNextOutGoing = null;
-        for (ResourceDefinitionBO conditionSequenceDefinitionBO : super.getResourceDefinitionBO().getOutGoing()) {// 连线元素应该有且只有一个出口，错误可能原因：json文件被恶意篡改（图上也画不出两个出口，故由图导出的结果不会有问题）
+        for (ResourceDefinitionBO conditionSequenceDefinitionBO : exclusiveGatewayResourceDefinitionBO.getOutGoing()) {// 连线元素应该有且只有一个出口，错误可能原因：json文件被恶意篡改（图上也画不出两个出口，故由图导出的结果不会有问题）
             // 遍历每一种分支是否可行
             ResourceDefinitionBO nextOutGoing = baseSequenceFlowService.getDirectNextOutGoingResource(conditionSequenceDefinitionBO, outputVariablesMap);
             if (Objects.nonNull(nextOutGoing)) {

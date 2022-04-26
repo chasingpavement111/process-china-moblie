@@ -37,11 +37,14 @@
                 #{entity.status})
     </insert>
 
-    <update id="updateOrderAfterFinishInstance">
+    <update id="updateOrderAfterOperation">
         update wb_flow_order o
         set o.update_operator_id = #{entity.updateOperatorId},
-            o.update_time=#{entity.updateTime},
-            o.input_variables=#{entity.inputVariables}
+        o.update_time=#{entity.updateTime},
+        <if test="entity.status!=null and entity.status!=''">
+            o.status=#{entity.status},
+        </if>
+        o.input_variables=#{entity.inputVariables}
         where o.order_uuid = #{entity.orderUuid}
     </update>
 
@@ -54,7 +57,7 @@
     <select id="getUnfinishedOrder" resultMap="BaseResultMap">
         select *
         from wb_flow_order o
-        where o.status in ('ready', 'processing') <!--todo zj 待工单启动机制完善，确定是否要包含ready状态-->
+        where o.status in ('ready', 'processing') <!--ready态也需注入bean，因为下面有instance。要做好一致性保证-->
         order by o.create_time asc
     </select>
 

@@ -3,6 +3,9 @@ package com.chinamobile.zj.flowProcess.enums;
 import com.chinamobile.zj.comm.ParamException;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Arrays;
+import java.util.List;
+
 public enum OrderStatusEnum {
 
     READY("ready", "待处理"),
@@ -10,6 +13,8 @@ public enum OrderStatusEnum {
     FINISHED("finished", "已完结"),
     CANCELED("canceled", "已废止"),
     ;
+
+    public static final List<String> UNFINISHED_STATUS_NAME_EN_LIST = Arrays.asList(READY.getNameEn(), PROCESSING.getNameEn());
 
     /**
      * 状态-英文

@@ -1,12 +1,12 @@
 package com.chinamobile.zj.flowProcess.mapper;
 
+import com.baomidou.mybatisplus.mapper.BaseMapper;
 import com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstance;
 import com.chinamobile.zj.flowProcess.entity.WbFlowResourceInstanceDO;
-import com.baomidou.mybatisplus.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -29,5 +29,7 @@ public interface WbFlowResourceInstanceMapper extends BaseMapper<WbFlowResourceI
 
     WbFlowResourceInstanceDO getInstanceByInstanceUuid(@Param("resourceInstanceUuid") String resourceInstanceUuid);
 
-    List<WbFlowResourceInstance> getInstanceByOrderUuidList(@Param("orderUuidList") List<String> orderUuidList);
+    List<WbFlowResourceInstanceDO> getInstanceByOrderUuidList(@Param("orderUuidList") List<String> orderUuidList);
+
+    int invalidateInstance(@Param("instanceUuidList") Set<String> setOfInvalidInstanceUuid);
 }

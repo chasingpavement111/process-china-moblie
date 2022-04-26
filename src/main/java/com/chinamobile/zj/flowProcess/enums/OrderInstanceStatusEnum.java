@@ -8,7 +8,7 @@ import java.util.List;
 
 public enum OrderInstanceStatusEnum {
 
-    READY("ready", "待启动", Arrays.asList(ResourceInstanceTypeEnum.REVIEW_DISPATCH_POINT)),
+//    READY("ready", "待启动", Arrays.asList(ResourceInstanceTypeEnum.REVIEW_DISPATCH_POINT)), 暂时无用状态
     PROCESSING("processing", "进行中", Arrays.asList(ResourceInstanceTypeEnum.EXECUTION_DISPATCH_POINT, ResourceInstanceTypeEnum.EXECUTION, ResourceInstanceTypeEnum.REVIEW, ResourceInstanceTypeEnum.REVIEW_DISPATCH_POINT)),
     FINISHED("finished", "已完成", Arrays.asList(ResourceInstanceTypeEnum.ASSIGNMENT, ResourceInstanceTypeEnum.EXECUTION, ResourceInstanceTypeEnum.EXECUTION_DISPATCH_POINT)),
     REJECTED("rejected", "驳回", Arrays.asList(ResourceInstanceTypeEnum.REVIEW)),
@@ -18,7 +18,7 @@ public enum OrderInstanceStatusEnum {
     /**
      * 非终态
      */
-    public static final List<String> UNFINISHED_STATUS_NAME_EN_LIST = Arrays.asList(READY.getNameEn(), PROCESSING.getNameEn());
+    public static final List<String> UNFINISHED_STATUS_NAME_EN_LIST = Arrays.asList(PROCESSING.getNameEn()); // READY.getNameEn(),
 
     /**
      * 状态-英文
@@ -49,12 +49,12 @@ public enum OrderInstanceStatusEnum {
     }
 
     public static OrderInstanceStatusEnum getByNameEn(String nameEn) {
-        ParamException.isTrue(StringUtils.isBlank(nameEn), String.format("invalid blank nodeStatus: [%s]", nameEn));
+        ParamException.isTrue(StringUtils.isBlank(nameEn), String.format("invalid blank instanceStatus: [%s]", nameEn));
         for (OrderInstanceStatusEnum elem : values()) {
             if (nameEn.equals(elem.nameEn)) {
                 return elem;
             }
         }
-        throw new ParamException(String.format("invalid nodeStatus: [%s]", nameEn));
+        throw new ParamException(String.format("invalid instanceStatus: [%s]", nameEn));
     }
 }

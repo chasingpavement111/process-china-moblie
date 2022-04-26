@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.toolkit.CollectionUtils;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
+import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
 import com.chinamobile.zj.flowProcess.service.InputParam;
 import com.chinamobile.zj.flowProcess.service.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.OutputParam;
@@ -29,6 +30,9 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
     @OutputParam
     private Boolean hasCountyManager;
 
+    @OutputParam
+    private Boolean preCheckApplicationPassedByWhiteCollar;
+
     /**
      * 县HDICT专员转派的家客经理的用户ID
      */
@@ -52,8 +56,32 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
     public ExecutionResult execute() {
         ParamException.isTrue(Objects.isNull(preCheckApplication) || StringUtils.isBlank(preCheckApplication.getAreaId3()),
                 String.format("inputParam[preCheckApplication.areaId3] should not be blank"));
-        ParamException.isTrue(StringUtils.isBlank(assignedJiaKeCountyManagerId),
-                "inputParam[jiaKeCountyManagerId] should not be blank");
+
+        // 必须设置 hasCountyManager，否则流程走向无法判断
+        List<HdictUserInfoDO> jiaKeManagerInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
+        setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
+        if (Boolean.TRUE.equals(getHasCountyManager())) {
+            // 不允许进行审核，必须进行转派。
+            preCheckApplicationPassedByWhiteCollar = false;
+            ParamException.isTrue(!OrderInstanceStatusEnum.FINISHED.getNameEn().equals(getOperationResult()),
+                    String.format("county[areaId3=%s] has jiaKeManager, not allowed to do review operation", preCheckApplication.getAreaId3()));
+            // 该县不存在家客经理，必须进行转派。转派对象不能为空
+            ParamException.isTrue(StringUtils.isBlank(assignedJiaKeCountyManagerId),
+                    String.format("inputParam[assignedJiaKeCountyManagerId] should not be blank"));
+            // 检查用户指定的家客经理：角色、归属县市
+            Optional<HdictUserInfoDO> jiaKeManagerInfoOpt = userInfoService.getByUserCRMId(assignedJiaKeCountyManagerId);
+            ParamException.isTrue(BooleanUtils.isNotTrue(jiaKeManagerInfoOpt.isPresent()),
+                    String.format("invalid userId[%s], user not exist.", getOperatorId()));
+            HdictUserInfoDO jiaKeManagerInfo = jiaKeManagerInfoOpt.get();
+            ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(jiaKeManagerInfo.getAreaId3()) && "hdict003".equals(jiaKeManagerInfo.getRoleId())),
+                    String.format("user[CRMId=%s, areaId3=%s, roleName=%s] is not a valid target user!", jiaKeManagerInfo.getLoginId(), jiaKeManagerInfo.getAreaId3(), jiaKeManagerInfo.getRoleName()));
+            setAssignedJiaKeCountyManagerName(jiaKeManagerInfo.getName());
+        } else {
+            // 该县不存在家客经理，必须由本步骤操作人进行审核动作。
+            // 若进行的是完成操作，operationResult=finished，不符合要求
+            ReviewOperationResultEnum.getByNameEn(getOperationResult()); // 检查必须经过审核
+            preCheckApplicationPassedByWhiteCollar = OrderInstanceStatusEnum.PASSED.getNameEn().equals(getStatus());
+        }
 
         // 当前步骤操作人
 //        List<HdictUserInfoDO> operatorInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict006"); // roleId='hdict006', roleName='HDICT专员-县市'
@@ -64,21 +92,7 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 //        setOperatorId(operatorInfo.getLoginId());
 //        setOperatorName(operatorInfo.getName());
 //        setOperatorRoleName(operatorInfo.getRoleName());
-        // 检查用户的操作权限：必须为与发起人同县市的县Hdict专员
-        checkOperatorAccessRight();
 
-        // 必须设置 hasCountyManager，否则流程走向无法判断
-        List<HdictUserInfoDO> jiaKeManagerInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
-        setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
-
-        // 检查用户指定的家客经理：角色、归属县市
-        Optional<HdictUserInfoDO> jiaKeManagerInfoOpt = userInfoService.getByUserCRMId(assignedJiaKeCountyManagerId);
-        ParamException.isTrue(BooleanUtils.isNotTrue(jiaKeManagerInfoOpt.isPresent()),
-                String.format("invalid userId[%s], user not exist.", getOperatorId()));
-        HdictUserInfoDO jiaKeManagerInfo = jiaKeManagerInfoOpt.get();
-        ParamException.isTrue(preCheckApplication.getAreaId3().equals(jiaKeManagerInfo.getAreaId3()) && "hdict003".equals(jiaKeManagerInfo.getRoleId()),
-                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] is not a valid target user!", jiaKeManagerInfo.getLoginId(), jiaKeManagerInfo.getAreaId3(), jiaKeManagerInfo.getRoleName()));
-        setAssignedJiaKeCountyManagerName(jiaKeManagerInfo.getName());
 
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
     }
@@ -89,7 +103,7 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
         ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        ParamException.isTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && "hdict006".equals(operatorInfo.getRoleId()),
+        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
                 String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
                         operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
         setOperatorName(operatorInfo.getName());

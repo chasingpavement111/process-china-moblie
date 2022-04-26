@@ -22,7 +22,7 @@ public interface WbFlowOrderMapper extends BaseMapper<WbFlowOrder> {
 
     WbFlowOrderDO getByUuid(@Param("orderUuid") String orderUuid);
 
-    int updateOrderAfterFinishInstance(@Param("entity") WbFlowOrder updateOrderEntity);
+    int updateOrderAfterOperation(@Param("entity") WbFlowOrder updateOrderEntity);
 
     List<WbFlowOrder> getUnfinishedOrder();
 }

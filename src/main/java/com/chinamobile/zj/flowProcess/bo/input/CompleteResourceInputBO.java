@@ -1,23 +1,15 @@
 package com.chinamobile.zj.flowProcess.bo.input;
 
+import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-
 @Data
-public class CompleteResourceInputBO {
+public class CompleteResourceInputBO extends BaseOperateResourceInputBO {
 
-    @NotBlank
-    private String orderUuid;
+    private String operationResult = OrderInstanceStatusEnum.FINISHED.getNameEn();
 
-    /**
-     * 必传，可能一个工单有多个“流转中”中的步骤，需要通过本参数，明确告知当前操作的是哪个步骤
-     */
-    @NotBlank
-    private String resourceInstanceUuid;
-
-    @NotBlank
-    private String operatorId;
-
-    private String operationSnapshot;
+    private void setOperationResult(String operationResult) {
+        // 私有化方法，限制入参不允许外部设置。完成任务，步骤实例状态自动变成finished
+        this.operationResult = operationResult;
+    }
 }

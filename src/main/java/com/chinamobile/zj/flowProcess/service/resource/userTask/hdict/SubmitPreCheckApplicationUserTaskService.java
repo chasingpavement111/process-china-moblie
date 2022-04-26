@@ -73,6 +73,7 @@ public class SubmitPreCheckApplicationUserTaskService extends BaseUserTaskServic
 
     @Override
     public Map<String, String> supportedOperatorRoleMap() {
+        // todo zj 查询详情时，未执行钱返回空
         return Collections.EMPTY_MAP; // 空集合，标识支持所有类型的用户
     }
 

@@ -3661,7 +3661,7 @@
                 "conditionsequenceflow":{
                     "expression":{
                         "type":"static",
-                        "staticValue":"jiaKeCountyManagerId!=null"
+                        "staticValue": "assignedJiaKeCountyManagerId!=null"
                     }
                 },
                 "executionlisteners":"",
@@ -3715,7 +3715,7 @@
                 "conditionsequenceflow":{
                     "expression":{
                         "type":"static",
-                        "staticValue":"jiaKeCountyManagerId==null"
+                        "staticValue": "assignedJiaKeCountyManagerId==null"
                     }
                 },
                 "executionlisteners":"",

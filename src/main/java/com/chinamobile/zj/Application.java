@@ -53,7 +53,7 @@ public class Application {
     @Bean("flowDefinitionServiceMap")
     public Map<String, FlowDefinitionResourceService> getFlowDefinitionServiceMapBean() {
         Map<String, FlowDefinitionResourceService> definitionResourceId2DefinitionService = new HashMap<String, FlowDefinitionResourceService>() {
-            {
+            {// todo zj 修改。
                 String jsonXml;
 //                File jsonFileOfProcess = new File("C:\\work\\zj\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");
                 File jsonFileOfProcess = new File("C:\\projects\\china_mobile\\java\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");

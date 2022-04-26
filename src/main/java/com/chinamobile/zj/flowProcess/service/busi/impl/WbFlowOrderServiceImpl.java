@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.chinamobile.zj.comm.InternalException;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.entity.user.WgUserInfo;
-import com.chinamobile.zj.flowProcess.bo.dto.CreateFlowOrderDTO;
-import com.chinamobile.zj.flowProcess.bo.dto.FinishResourceResultDTO;
-import com.chinamobile.zj.flowProcess.bo.dto.OrderInfoResultDTO;
-import com.chinamobile.zj.flowProcess.bo.dto.OrderResourceInstanceInfoResultDTO;
+import com.chinamobile.zj.flowProcess.bo.dto.*;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowDefinition;
@@ -120,12 +117,36 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
 
         orderMapper.insert(orderEntityDO);
 
-        createFlowServiceBean(orderEntityDO); // todo zj 下面代码若报错，则删除
+        createFlowServiceBean(orderEntityDO); // todo zj 下面代码若报错，则删除.. 先test确定下面跑错后，不会生成order记录
 
         // 创建流程节点
         instanceService.create(orderEntityDO);
 
         return orderEntityDO.getOrderUuid();
+    }
+
+    @Override
+    public String start(StartFlowOrderDTO startOrderDTO) {
+        ParamException.isTrue(Objects.isNull(startOrderDTO), "inputParam[startOrderDTO] should not be null!");
+        // 只校验用户有效性
+        Optional<WgUserInfo> userInfoEntityOpt = userInfoService.getByUserCRMId(startOrderDTO.getOperatorId());
+        ParamException.isTrue(BooleanUtils.isNotTrue(userInfoEntityOpt.isPresent()),
+                String.format("invalid creatorId: [%s], user not found!", startOrderDTO.getOperatorId()));
+
+        WbFlowOrderDO orderEntityDO = getByUuid(startOrderDTO.getOrderUuid());
+        // 只有工单处于非终态时，允许被启动。processing时允许重复启动
+        ParamException.isTrue(BooleanUtils.isNotTrue(OrderStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(orderEntityDO.getStatus())),
+                String.format("order[orderUuid=%s] status is [%s], only in [%s] status allowed to be started",
+                        orderEntityDO.getOrderUuid(), orderEntityDO.getStatus(),
+                        OrderStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.stream().collect(Collectors.joining(","))));
+
+        // 只有工单创建人，可以启动工单。
+        ParamException.isTrue(!orderEntityDO.getCreatorId().equals(startOrderDTO.getOperatorId()),
+                String.format("user[CRMId=%s] don't have operation right, order can only be started by its creator[CRMId=%s]",
+                        startOrderDTO.getOperatorId(), orderEntityDO.getCreatorId()));
+
+        updateOrderAfterOperation(orderEntityDO, startOrderDTO.getOperatorId(), startOrderDTO.getInputVariablesMap(), OrderStatusEnum.PROCESSING);
+        return startOrderDTO.getOrderUuid();
     }
 
     @Override
@@ -154,33 +175,52 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
 
     @Transactional
     @Override
+    public String reviewResourceInstance(ReviewResourceInputBO inputBO) {
+        // todo zj 可以与 completeResourceInstance 合并
+        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
+        WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
+        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），这不再支持任何变更操作、
+        ParamException.isTrue(!OrderStatusEnum.PROCESSING.getNameEn().equals(orderEntityDO.getStatus()),
+                String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
+
+        FinishResourceResultDTO resultDTO = instanceService.review(orderEntityDO, inputBO);
+        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
+        // todo zj 工单结束，更新工单状态为finished
+        return resultDTO.getInstanceUuid();
+    }
+
+    @Transactional
+    @Override
     public String completeResourceInstance(CompleteResourceInputBO inputBO) {
         ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
         WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
-        FinishResourceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO);
-        updateOrderAfterFinishInstance(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap());
+        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），这不再支持任何变更操作、
+        ParamException.isTrue(!OrderStatusEnum.PROCESSING.getNameEn().equals(orderEntityDO.getStatus()),
+                String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
+
+        FinishResourceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
+        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
         // todo zj 工单结束
         return resultDTO.getInstanceUuid();
     }
 
-    @Override
-    public String reviewResourceInstance(ReviewResourceInputBO inputBO) {
-        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
-        WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
-        return instanceService.review(orderEntityDO, inputBO);
-    }
-
-    private void updateOrderAfterFinishInstance(WbFlowOrder orderEntity, String operatorId, Map<String, Object> outputVariablesMapOfInstance) {
+    private void updateOrderAfterOperation(WbFlowOrder orderEntity, String operatorId, Map<String, Object> outputVariablesMapOfInstance, OrderStatusEnum orderStatusEnum) {
         WbFlowOrder updateOrderEntity = new WbFlowOrder();
         updateOrderEntity.setOrderUuid(orderEntity.getOrderUuid());
         updateOrderEntity.setUpdateOperatorId(operatorId);
         updateOrderEntity.setUpdateTime(DateUtil.format(new Date(), DateUtil.DATE_TIME_REGEX));
+        if (Objects.nonNull(orderStatusEnum)) {
+            updateOrderEntity.setStatus(orderStatusEnum.getNameEn());
+        }
+
         Map<String, Object> variablesMap = JsonConvertUtil.parseToParameterizedType(orderEntity.getInputVariables(), new TypeReference<Map<String, Object>>() {
         });
-        variablesMap.putAll(outputVariablesMapOfInstance);
+        if (MapUtils.isNotEmpty(outputVariablesMapOfInstance)) {
+            variablesMap.putAll(outputVariablesMapOfInstance);
+        }
         updateOrderEntity.setInputVariables(JsonConvertUtil.toJsonString(variablesMap));
 
-        int updateCount = orderMapper.updateOrderAfterFinishInstance(updateOrderEntity);
+        int updateCount = orderMapper.updateOrderAfterOperation(updateOrderEntity);
         InternalException.isTrue(1 != updateCount,
                 String.format("updateCount=[%s], should be number [1]. please contact the administrator", updateCount));
     }

@@ -4,6 +4,7 @@ package com.chinamobile.zj.flowProcess.controller;
 import com.chinamobile.zj.comm.ResponseData;
 import com.chinamobile.zj.flowProcess.bo.dto.CreateFlowOrderDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.OrderInfoResultDTO;
+import com.chinamobile.zj.flowProcess.bo.dto.StartFlowOrderDTO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowOrderService;
@@ -58,6 +59,33 @@ public class WbFlowOrderController {
             }
         }
         String orderUuid = orderService.create(createOrderDTO, true);
+        return ResponseData.ok(orderUuid);
+    }
+
+    @PostMapping(value = "/order/start")
+    @URIAccess(menuName = "启动ready的工单")
+    public ResponseData startOrder(@Valid @RequestBody StartFlowOrderDTO startOrderDTO) {
+        if (false) {
+            // 入参样例
+            String loginUserId = "chenyaoting";
+            startOrderDTO.setOperatorId(loginUserId);
+            startOrderDTO.setOrderUuid("f3fa57b6-404b-4a00-825f-cde23b6600fb"); // 固定值。预勘流程的流程唯一标识
+            {
+                Map<String, Object> inputVariablesMap = new HashMap<>();
+                {
+                    // inputVariablesMap 入参设置样例。必须包含key=preCheckApplication, value的class类型为 PreCheckApplication.class 的元素。
+                    // 原因见 com.chinamobile.zj.hdict.entity.PreCheckApplication 注释
+                    // com.chinamobile.zj.hdict.entity.PreCheckApplication 哪些属性必填，见注解。
+                    PreCheckApplication preCheckApplication = new PreCheckApplication();
+                    preCheckApplication.setAreaId3("84");
+                    preCheckApplication.setCreatorId(loginUserId);
+                    inputVariablesMap.put("preCheckApplication", preCheckApplication);
+                }
+                // 最终的工单入参，为 创工单时入参 与 本入参的 合集
+                startOrderDTO.setInputVariablesMap(inputVariablesMap);
+            }
+        }
+        String orderUuid = orderService.start(startOrderDTO);
         return ResponseData.ok(orderUuid);
     }
 

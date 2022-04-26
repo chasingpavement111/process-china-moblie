@@ -4,8 +4,11 @@ import com.chinamobile.zj.comm.InternalException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.bo.definition.ResourceDefinitionBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
+import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
+import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
 import com.chinamobile.zj.flowProcess.enums.StencilEnum;
 import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
+import com.chinamobile.zj.util.JsonConvertUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,16 +34,28 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
     private String operatorName;
 
     /**
-     * 步骤的操作结果
+     * 步骤的操作结果的外部入参值
+     * 决定status
      */
     private String operationResult;
+    /**
+     * 步骤的操作结果备注信息的外部入参值
+     * 用户描述语句
+     */
+    private String operationMessage;
 
     /**
      * 步骤状态，由操作结果决定
      */
     private String status;
 
+    /**
+     * 操作的入参快照
+     * todo zj 不做持久化?？？？
+     */
     private String operationSnapshot;
+
+    private transient Map<String, Object> outputVariablesMap;
 
 //    operator_id, operation_status, status(由operation_status+instance_type转换得到), operation_snapshot
 
@@ -126,8 +141,24 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
             return;
         }
         this.operationResult = operationResult;
-        // todo zj 根据operationResult动作结果, 设置流程步骤的状态
-        setStatus(operationResult);
+
+        // 根据operationResult动作结果, 设置流程步骤的状态
+        if (operationResult.equals(OrderInstanceStatusEnum.FINISHED.getNameEn())) {
+            // 1、完成操作
+            setStatus(OrderInstanceStatusEnum.FINISHED.getNameEn());
+        } else {
+            // 2、审核操作
+            ReviewOperationResultEnum operationResultEnum = ReviewOperationResultEnum.getByNameEn(operationResult);
+            setStatus(operationResultEnum.getCorrespondingInstanceStatusEnum().getNameEn());
+        }
+    }
+
+    public String getOperationMessage() {
+        return operationMessage;
+    }
+
+    public void setOperationMessage(String operationMessage) {
+        this.operationMessage = operationMessage;
     }
 
     public String getStatus() {
@@ -150,9 +181,41 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
             return;
         }
         this.operationSnapshot = operationSnapshot;
-//        BaseUserTaskService tempSource = JsonConvertUtil.parseToObject(operationSnapshot, getClass()); // 类需要实现fastJson序列化的，必须定义setter\getter
-//        BeanUtils.copyProperties(tempSource, this); // todo zj 好像不需要 外部代码已实现赋值
+
+        // 将操作的入参，更新到对应的操作实现类的成员变量中
+        BaseUserTaskService tempSource = JsonConvertUtil.parseToObject(operationSnapshot, getClass()); // 类需要实现fastJson序列化的，必须定义setter\getter
+        for (Field field : getClass().getDeclaredFields()) {
+            if (Objects.nonNull(field.getAnnotation(Autowired.class))) {
+                // 忽略Autowire的成员
+                continue;
+            }
+            field.setAccessible(true); // 使得可以获取private修饰的成员变量值
+            try {
+                Object newValue = field.get(tempSource);
+                if (Objects.nonNull(newValue)) {
+                    // 入参值非空，则更新
+                    field.set(this, newValue);
+                }
+            } catch (IllegalAccessException ex) {
+                throw new InternalException(ex);
+            }
+        }
+
+
+//        BeanUtils.copyProperties(tempSource, this); // todo zj 好像不需要 外部代码已实现赋值。operationSnapshot 可能是outputVariable的子集，导致参数丢失
+////        if(true){
+////            throw new InternalException("aa");
+////        }
 //        System.out.println(1);
+//        // todo zj BeanUtil有问题就换成反射
+    }
+
+    public Map<String, Object> getOutputVariablesMap() {
+        return outputVariablesMap;
+    }
+
+    public void setOutputVariablesMap(Map<String, Object> outputVariablesMap) {
+        this.outputVariablesMap = outputVariablesMap;
     }
 
     /**
@@ -171,7 +234,7 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
      * 只返回具体类中声明的成员变量
      * 避免获取基类中的公共变量。因为这个方法的返回值，用于回写到order的inputVariables, 没必要将每个步骤独有的信息写入order
      */
-    public Map<String, Object> getUniqueOutputVariables() {
+    public Map<String, Object> currentUniqueOutputVariables() { // 方法名，不要已get开头，避免写入 wb_flow_resource_instanceoutput_variables todo  zj test
         Map<String, Object> map = new HashMap<>();
         for (Field field : getClass().getDeclaredFields()) {
             if (Objects.nonNull(field.getAnnotation(Autowired.class))) {

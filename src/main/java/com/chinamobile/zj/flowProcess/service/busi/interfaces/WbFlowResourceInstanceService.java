@@ -24,13 +24,13 @@ public interface WbFlowResourceInstanceService extends IService<WbFlowResourceIn
 
     void injectBeans(List<WbFlowOrder> orderEntityList);
 
+    List<String> create(WbFlowOrderDO orderEntity);
+
+    FinishResourceResultDTO review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO);
+
     FinishResourceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO);
 
     List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid);
 
     BaseUserTaskService getResourceInstanceBean(String resourceInstanceUuid);
-
-    List<String> create(WbFlowOrderDO orderEntity);
-
-    String review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO);
 }
