@@ -6,6 +6,7 @@ import com.chinamobile.zj.comm.InternalException;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.entity.user.WgUserInfo;
 import com.chinamobile.zj.flowProcess.bo.dto.*;
+import com.chinamobile.zj.flowProcess.bo.input.CancelResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowDefinition;
@@ -150,13 +151,13 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
     }
 
     @Override
-    public OrderInfoResultDTO info(String orderUuid) {
+    public OrderInfoResultDTO info(String orderUuid, Boolean includeInvalidInstance) {
         OrderInfoResultDTO resultDTO = new OrderInfoResultDTO();
 
         WbFlowOrder orderEntity = getByUuid(orderUuid);
         BeanUtils.copyProperties(orderEntity, resultDTO);
 
-        List<OrderResourceInstanceInfoResultDTO> instanceList = instanceService.getExecutionHistoryByOrderUuid(orderUuid);
+        List<OrderResourceInstanceInfoResultDTO> instanceList = instanceService.getExecutionHistoryByOrderUuid(orderUuid, includeInvalidInstance);
         resultDTO.setInstanceExecutionHistory(instanceList);
         if (instanceList.size() > 0) {
             List<OrderResourceInstanceInfoResultDTO> unfinishedInstanceList = instanceList.stream()
@@ -175,15 +176,30 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
 
     @Transactional
     @Override
+    public String cancelResourceInstance(CancelResourceInputBO inputBO) {
+        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[inputBO] should not be null!");
+        WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
+        // 仅有非终态“ready\processing”状态的工单，允许进行变更操作。若工单状态为终态（finished\cancelled），则不再支持任何变更操作、
+        ParamException.isTrue(!OrderStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(orderEntityDO.getStatus()),
+                String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
+
+        OperationOnResourceInstanceResultDTO resultDTO = instanceService.cancel(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
+        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), OrderStatusEnum.CANCELED);
+        // todo zj 工单结束
+        return resultDTO.getInstanceUuid();
+    }
+
+    @Transactional
+    @Override
     public String reviewResourceInstance(ReviewResourceInputBO inputBO) {
         // todo zj 可以与 completeResourceInstance 合并
-        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
+        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[inputBO] should not be null!");
         WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
-        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），这不再支持任何变更操作、
+        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），则不再支持任何变更操作、
         ParamException.isTrue(!OrderStatusEnum.PROCESSING.getNameEn().equals(orderEntityDO.getStatus()),
                 String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
 
-        FinishResourceResultDTO resultDTO = instanceService.review(orderEntityDO, inputBO);
+        OperationOnResourceInstanceResultDTO resultDTO = instanceService.review(orderEntityDO, inputBO);
         updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
         // todo zj 工单结束，更新工单状态为finished
         return resultDTO.getInstanceUuid();
@@ -192,13 +208,13 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
     @Transactional
     @Override
     public String completeResourceInstance(CompleteResourceInputBO inputBO) {
-        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[executionResourceInputBO] should not be null!");
+        ParamException.isTrue(Objects.isNull(inputBO), "inputParam[inputBO] should not be null!");
         WbFlowOrderDO orderEntityDO = getByUuid(inputBO.getOrderUuid());
-        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），这不再支持任何变更操作、
+        // 仅有“processing”状态的工单，允许进行变更操作。若工单状态为ready, 可以startOrder成功后重试；若工单状态为终态（finished\cancelled），则不再支持任何变更操作、
         ParamException.isTrue(!OrderStatusEnum.PROCESSING.getNameEn().equals(orderEntityDO.getStatus()),
                 String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
 
-        FinishResourceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
+        OperationOnResourceInstanceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
         updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
         // todo zj 工单结束
         return resultDTO.getInstanceUuid();

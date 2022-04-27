@@ -7,9 +7,10 @@ import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.entity.user.WgUserInfo;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.bo.definition.ResourceDefinitionBO;
-import com.chinamobile.zj.flowProcess.bo.dto.FinishResourceResultDTO;
+import com.chinamobile.zj.flowProcess.bo.dto.OperationOnResourceInstanceResultDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.OrderResourceInstanceInfoResultDTO;
 import com.chinamobile.zj.flowProcess.bo.input.BaseOperateResourceInputBO;
+import com.chinamobile.zj.flowProcess.bo.input.CancelResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
@@ -20,12 +21,13 @@ import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
 import com.chinamobile.zj.flowProcess.enums.StencilEnum;
 import com.chinamobile.zj.flowProcess.mapper.WbFlowResourceInstanceMapper;
-import com.chinamobile.zj.flowProcess.service.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInstanceService;
 import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
 import com.chinamobile.zj.flowProcess.service.definition.FlowService;
 import com.chinamobile.zj.flowProcess.service.resource.BaseStartNoneEventService;
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.LimitOperatorRole;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.ReviewTask;
 import com.chinamobile.zj.service.interfaces.user.WgUserInfoService;
 import com.chinamobile.zj.util.DateUtil;
 import com.chinamobile.zj.util.JsonConvertUtil;
@@ -108,38 +110,21 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         return uuidListOfOutGoingInstanceEntity;
     }
 
+    @Override
+    public OperationOnResourceInstanceResultDTO cancel(WbFlowOrderDO orderEntityDO, CancelResourceInputBO inputBO) {
+        return null; // todo zj
+    }
+
     @Transactional
     @Override
-    public FinishResourceResultDTO review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO) {
-        FinishResourceResultDTO resultDTO = operation(orderEntity, inputBO);
+    public OperationOnResourceInstanceResultDTO review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO) {
+        OperationOnResourceInstanceResultDTO resultDTO = operation(orderEntity, inputBO);
         if (ReviewOperationResultEnum.REJECTED.getNameEn().equals(inputBO.getOperationResult())) {
             // 若为审核驳回，需要更新相关前序instance的valid属性
             List<String> instanceUuidOfInstanceToBeReplacedList = resultDTO.getOutGoingInstanceUuidList();
 
-//
-//            Map<String, BaseUserTaskService> processingInstanceDefinitionKeyToBean = new HashMap<>();
-//            List<WbFlowResourceInstanceDO> instanceDOList = getInstanceByOrderUuid(orderEntity.getOrderUuid(), null);
-//            instanceDOList.forEach(instanceDO -> {
-//                if (instanceUuidOfInstanceToBeReplacedList.contains(instanceDO.getResourceInstanceUuid())) {
-//                    BaseUserTaskService userTaskServiceBean = getResourceInstanceBean(instanceDO.getResourceInstanceUuid());
-//                    processingInstanceDefinitionKeyToBean.put(instanceDO.getFlowResourceDefinitionKey(), userTaskServiceBean);
-//
-//                }
-//            });
-//
-//            List<WbFlowResourceInstance> invalidInstanceList = new ArrayList<>();
-//            instanceDOList.forEach(instanceDO -> {
-//                BaseUserTaskService processingUserTaskServiceBean = processingInstanceDefinitionKeyToBean.get(instanceDO.getFlowResourceDefinitionKey());
-//                if (Objects.nonNull(processingUserTaskServiceBean) &&
-//                        BooleanUtils.isNotTrue(instanceDO.getResourceInstanceUuid().equals(processingUserTaskServiceBean.getResourceInstance().getResourceInstanceUuid()))) {
-//                    // 找到需要"直接"废弃的步骤实例
-//                    instanceDO.setValid(false);
-//                    invalidInstanceList.add(instanceDO);
-//                }
-//            });
-
             Map<String, WbFlowResourceInstanceDO> definitionKeyToInstanceDOOfOutGoings = new HashMap<>();
-            List<WbFlowResourceInstanceDO> instanceDOListOfOrder = getInstanceByOrderUuid(orderEntity.getOrderUuid(), null);
+            List<WbFlowResourceInstanceDO> instanceDOListOfOrder = getInstanceByOrderUuid(orderEntity.getOrderUuid(), null, true);
             instanceDOListOfOrder.forEach(instanceDO -> {
                 if (instanceUuidOfInstanceToBeReplacedList.contains(instanceDO.getResourceInstanceUuid())) {
                     definitionKeyToInstanceDOOfOutGoings.put(instanceDO.getFlowResourceDefinitionKey(), instanceDO);
@@ -184,48 +169,19 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         return resultDTO;
     }
 
-    /**
-     * 获取 startInstanceUuid -> endInstanceUuid 之间的所有实例，不包括start\end实例
-     *
-     * @param resourceUuidToSelfOfOrder 整个工单下的所有步骤实例。不区分执行状态、有效状态
-     * @param startInstanceUuid         start实例
-     * @param endInstanceUuid           end实例
-     */
-    private Set<String> getAllInstanceUuidInBetween(Map<String, WbFlowResourceInstanceDO> resourceUuidToSelfOfOrder, String startInstanceUuid, String endInstanceUuid) {
-        WbFlowResourceInstanceDO startInstanceDo = resourceUuidToSelfOfOrder.get(startInstanceUuid);
-        if (Objects.isNull(startInstanceDo)) {
-            return Collections.EMPTY_SET;
-        }
-        if (CollectionUtils.isEmpty(startInstanceDo.getLatterResourceInstanceUuidList())) {
-            // 并行步骤。可能存在没有闭环到 endInstanceUuid, 但是需要被invalid的节点
-            return Collections.EMPTY_SET;
-        }
-        Set<String> setOfInstanceUuidInBetween = new HashSet<>();
-        startInstanceDo.getLatterResourceInstanceUuidList().forEach(latterInstanceUuid -> {
-            WbFlowResourceInstanceDO latterInstanceDO = resourceUuidToSelfOfOrder.get(latterInstanceUuid);
-            if (Objects.nonNull(latterInstanceDO) && BooleanUtils.isNotTrue(endInstanceUuid.equals(latterInstanceDO.getResourceInstanceUuid()))) {
-                setOfInstanceUuidInBetween.add(latterInstanceDO.getResourceInstanceUuid());
-
-                // 往后找，直到与新创建的有效outGoingInstance闭环
-                Set<String> subSet = getAllInstanceUuidInBetween(resourceUuidToSelfOfOrder, latterInstanceUuid, endInstanceUuid);
-                setOfInstanceUuidInBetween.addAll(subSet);
-            }
-        });
-        return setOfInstanceUuidInBetween;
-    }
-
     @Transactional
     @Override
-    public FinishResourceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO) {
+    public OperationOnResourceInstanceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO) {
         return operation(orderEntity, inputBO);
     }
 
-    public FinishResourceResultDTO operation(WbFlowOrderDO orderEntity, BaseOperateResourceInputBO inputBO) {
+    public OperationOnResourceInstanceResultDTO operation(WbFlowOrderDO orderEntity, BaseOperateResourceInputBO inputBO) {
         Optional<WgUserInfo> userInfoEntityOpt = userInfoService.getByUserCRMId(inputBO.getOperatorId());
         ParamException.isTrue(BooleanUtils.isNotTrue(userInfoEntityOpt.isPresent()),
                 String.format("invalid operatorId: [%s], user not found!", inputBO.getOperatorId()));
         String instanceUuid = inputBO.getResourceInstanceUuid();
         WbFlowResourceInstanceDO processingInstanceEntity = getInstanceByInstanceUuid(instanceUuid);
+        // 强制废止操作，可以在任意状态进行。审核、完成操作，只能对非终态的步骤实例进行
         ParamException.isTrue(BooleanUtils.isNotTrue(OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(processingInstanceEntity.getStatus())),
                 String.format("instance[instanceUuid=%s] status is [%s], only in [%s] status allowed to be completed",
                         processingInstanceEntity.getResourceInstanceUuid(), processingInstanceEntity.getStatus(),
@@ -243,6 +199,12 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
             if (concreteUserTaskService instanceof LimitOperatorRole) {
                 // 若限制操作人权限，则需要做权限校验
                 ((LimitOperatorRole) concreteUserTaskService).checkOperatorAccessRight();
+            }
+            if (BooleanUtils.isNotTrue(concreteUserTaskService instanceof ReviewTask)) {
+                // 只有review类型的步骤，才可以进行review操作
+                ParamException.isTrue(!OrderInstanceStatusEnum.FINISHED.getNameEn().equals(concreteUserTaskService.getOperationResult()),
+                        String.format("instance[instanceUuid=%s, instanceDefinitionKey=%s] can only be completed, not allowed to do review",
+                                processingInstanceEntity.getResourceInstanceUuid(), concreteUserTaskService.getDefinitionKey()));
             }
             ExecutionResult executionResult = concreteUserTaskService.execute(); // 异常直接抛出 todo zj 返回结果作用？
         }
@@ -268,7 +230,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
             updateLatterInstance(instanceUuid, uuidListOfOutGoingInstanceEntity);
         }
 
-        FinishResourceResultDTO resultDTO = new FinishResourceResultDTO();
+        OperationOnResourceInstanceResultDTO resultDTO = new OperationOnResourceInstanceResultDTO();
         resultDTO.setInstanceUuid(instanceUuid);
         resultDTO.setOutGoingInstanceUuidList(uuidListOfOutGoingInstanceEntity);
         resultDTO.setOutputVariablesMap(outputVariablesMapOfInstance);
@@ -276,8 +238,8 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
     }
 
     @Override
-    public List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid) {
-        List<WbFlowResourceInstanceDO> instanceEntityList = getInstanceByOrderUuid(orderUuid, null);
+    public List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid, Boolean includeInvalidInstance) {
+        List<WbFlowResourceInstanceDO> instanceEntityList = getInstanceByOrderUuid(orderUuid, null, includeInvalidInstance);
         List<OrderResourceInstanceInfoResultDTO> instanceDTOList = new ArrayList<>();
         instanceEntityList.forEach(entity -> {
             OrderResourceInstanceInfoResultDTO dto = new OrderResourceInstanceInfoResultDTO();
@@ -425,6 +387,36 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         });
     }
 
+    /**
+     * 获取 startInstanceUuid -> endInstanceUuid 之间的所有实例，不包括start\end实例
+     *
+     * @param resourceUuidToSelfOfOrder 整个工单下的所有步骤实例。不区分执行状态、有效状态
+     * @param startInstanceUuid         start实例
+     * @param endInstanceUuid           end实例
+     */
+    private Set<String> getAllInstanceUuidInBetween(Map<String, WbFlowResourceInstanceDO> resourceUuidToSelfOfOrder, String startInstanceUuid, String endInstanceUuid) {
+        WbFlowResourceInstanceDO startInstanceDo = resourceUuidToSelfOfOrder.get(startInstanceUuid);
+        if (Objects.isNull(startInstanceDo)) {
+            return Collections.EMPTY_SET;
+        }
+        if (CollectionUtils.isEmpty(startInstanceDo.getLatterResourceInstanceUuidList())) {
+            // 并行步骤。可能存在没有闭环到 endInstanceUuid, 但是需要被invalid的节点
+            return Collections.EMPTY_SET;
+        }
+        Set<String> setOfInstanceUuidInBetween = new HashSet<>();
+        startInstanceDo.getLatterResourceInstanceUuidList().forEach(latterInstanceUuid -> {
+            WbFlowResourceInstanceDO latterInstanceDO = resourceUuidToSelfOfOrder.get(latterInstanceUuid);
+            if (Objects.nonNull(latterInstanceDO) && BooleanUtils.isNotTrue(endInstanceUuid.equals(latterInstanceDO.getResourceInstanceUuid()))) {
+                setOfInstanceUuidInBetween.add(latterInstanceDO.getResourceInstanceUuid());
+
+                // 往后找，直到与新创建的有效outGoingInstance闭环
+                Set<String> subSet = getAllInstanceUuidInBetween(resourceUuidToSelfOfOrder, latterInstanceUuid, endInstanceUuid);
+                setOfInstanceUuidInBetween.addAll(subSet);
+            }
+        });
+        return setOfInstanceUuidInBetween;
+    }
+
     private void updateAfterExecution(String resourceInstanceUuid, BaseUserTaskService userTaskService) {
         WbFlowResourceInstanceDO updateInstanceEntity = new WbFlowResourceInstanceDO();
         updateInstanceEntity.setResourceInstanceUuid(resourceInstanceUuid);
@@ -459,10 +451,10 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
                         updateCount, setOfInvalidInstanceUuid.size()));
     }
 
-    private List<WbFlowResourceInstanceDO> getInstanceByOrderUuid(String orderUuid, OrderInstanceStatusEnum instanceStatusEnum) {
+    private List<WbFlowResourceInstanceDO> getInstanceByOrderUuid(String orderUuid, OrderInstanceStatusEnum instanceStatusEnum, Boolean includeInvalidInstance) {
         ParamException.isTrue(StringUtils.isBlank(orderUuid), "inputParam[orderUuid] should not be blank!");
         List<WbFlowResourceInstanceDO> instanceEntityList = instanceMapper.getInstanceByOrderUuid(orderUuid,
-                Objects.isNull(instanceStatusEnum) ? null : instanceStatusEnum.getNameEn());
+                Objects.isNull(instanceStatusEnum) ? null : instanceStatusEnum.getNameEn(), includeInvalidInstance);
         InternalException.isTrue(CollectionUtils.isEmpty(instanceEntityList), // 可能原因：代码逻辑问题。一个工单下存在至少一个步骤
                 String.format("order[orderUuid=%s] should have at lease one resource instance, but found none! Please contact the administrator to check DB!", orderUuid));
         return instanceEntityList;

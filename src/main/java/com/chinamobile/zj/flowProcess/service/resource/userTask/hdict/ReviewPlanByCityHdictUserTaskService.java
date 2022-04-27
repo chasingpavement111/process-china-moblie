@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
+public class ReviewPlanByCityHdictUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
 
     @Autowired
     private HdictUserInfoService userInfoService;
@@ -29,38 +29,38 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
     @InheritParam
     private PreCheckApplication preCheckApplication;
 
-    /**
-     * 县HDICT专员转派的家客经理的用户ID
-     */
-    @InheritParam
-    private String assignedJiaKeCountyManagerId;
-
-    @InheritParam
-    private String assignedJiaKeCountyManagerName;
+    @OutputParam
+    private Boolean cityHdictUserId;
 
     @OutputParam
-    private Boolean preCheckApplicationPassedByWhiteCollar;
+    private Boolean planPassedByWhiteCollar;
 
     @Override
     public String getDefinitionKey() {
-        return "review_application_by_county_jia_ke_manager";
+        return "review_plan_by_city_hdict";
     }
 
     @Override
     public String getDefinitionKeyDesc() {
-        return "家客经理审核预勘需求";
+        return "市HDICT督导审批";
     }
 
     @Override
     public ExecutionResult execute() {
         ReviewOperationResultEnum.getByNameEn(getOperationResult()); // 检查必须经过审核
-        preCheckApplicationPassedByWhiteCollar = ReviewOperationResultEnum.PASSED.getNameEn().equals(getOperationResult());
+        if (ReviewOperationResultEnum.REJECTED.getNameEn().equals(getOperationResult())) {
+            // 审核不通过，直接返回
+            planPassedByWhiteCollar = false;
+        } else {
+            planPassedByWhiteCollar = true;
+        }
+
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
     }
 
     @Override
     public Map<String, String> supportedOperatorRoleMap() {
-        return Collections.singletonMap("hdict003", "家客经理-县市");
+        return Collections.singletonMap("hdict007", "HDICT专员-地市");
     }
 
     @Override
@@ -68,7 +68,7 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         // 步骤未结束时，status==null
         String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
                 OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
-        return MessageFormat.format("{0}（{1}）对预勘需求申请{2}", getOperatorRoleName(), getOperatorName(),
+        return MessageFormat.format("{0}（{1}）对方案审核{2}", getOperatorRoleName(), getOperatorName(),
                 operationStatus);
     }
 
@@ -78,13 +78,13 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        // 只允许被转派家客经理，进行审批。
-        ParamException.isTrue(!assignedJiaKeCountyManagerId.equals(operatorInfo.getLoginId()),
-                String.format("operator[CRMId=%s] is not the jiaKeManager that county hdict user assigned, only user[CRMId=%s] can operator this step!",
-                        getOperatorId(), assignedJiaKeCountyManagerId));
+        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
+                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
+                        operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
 
         setOperatorName(operatorInfo.getName());
         setOperatorRoleName(operatorInfo.getRoleName());
+        setCityHdictUserId(cityHdictUserId);
     }
 
     public PreCheckApplication getPreCheckApplication() {
@@ -95,27 +95,19 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         this.preCheckApplication = preCheckApplication;
     }
 
-    public String getAssignedJiaKeCountyManagerId() {
-        return assignedJiaKeCountyManagerId;
+    public Boolean getCityHdictUserId() {
+        return cityHdictUserId;
     }
 
-    public void setAssignedJiaKeCountyManagerId(String assignedJiaKeCountyManagerId) {
-        this.assignedJiaKeCountyManagerId = assignedJiaKeCountyManagerId;
+    public void setCityHdictUserId(Boolean cityHdictUserId) {
+        this.cityHdictUserId = cityHdictUserId;
     }
 
-    public String getAssignedJiaKeCountyManagerName() {
-        return assignedJiaKeCountyManagerName;
+    public Boolean getPlanPassedByWhiteCollar() {
+        return planPassedByWhiteCollar;
     }
 
-    public void setAssignedJiaKeCountyManagerName(String assignedJiaKeCountyManagerName) {
-        this.assignedJiaKeCountyManagerName = assignedJiaKeCountyManagerName;
-    }
-
-    public Boolean getPreCheckApplicationPassedByWhiteCollar() {
-        return preCheckApplicationPassedByWhiteCollar;
-    }
-
-    public void setPreCheckApplicationPassedByWhiteCollar(Boolean preCheckApplicationPassedByWhiteCollar) {
-        this.preCheckApplicationPassedByWhiteCollar = preCheckApplicationPassedByWhiteCollar;
+    public void setPlanPassedByWhiteCollar(Boolean planPassedByWhiteCollar) {
+        this.planPassedByWhiteCollar = planPassedByWhiteCollar;
     }
 }

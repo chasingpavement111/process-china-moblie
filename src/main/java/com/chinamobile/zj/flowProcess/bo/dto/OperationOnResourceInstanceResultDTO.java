@@ -9,7 +9,7 @@ import java.util.Map;
  * 完成步骤实例的返回结构体
  */
 @Data
-public class FinishResourceResultDTO {
+public class OperationOnResourceInstanceResultDTO {
 
     private String instanceUuid;
 

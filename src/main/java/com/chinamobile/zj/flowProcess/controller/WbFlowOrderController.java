@@ -5,10 +5,11 @@ import com.chinamobile.zj.comm.ResponseData;
 import com.chinamobile.zj.flowProcess.bo.dto.CreateFlowOrderDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.OrderInfoResultDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.StartFlowOrderDTO;
+import com.chinamobile.zj.flowProcess.bo.input.CancelResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
+import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
 import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowOrderService;
-import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInstanceService;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.service.interfaces.URIAccess;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +33,6 @@ public class WbFlowOrderController {
 
     @Autowired
     private WbFlowOrderService orderService;
-
-    @Autowired
-    private WbFlowResourceInstanceService instanceService;
 
     @PostMapping(value = "/order/create")
     @URIAccess(menuName = "创建工单")
@@ -81,7 +79,7 @@ public class WbFlowOrderController {
                     preCheckApplication.setCreatorId(loginUserId);
                     inputVariablesMap.put("preCheckApplication", preCheckApplication);
                 }
-                // 最终的工单入参，为 创工单时入参 与 本入参的 合集
+                // 最终的工单入参： 为 创工单时入参 与 本入参的 合集
                 startOrderDTO.setInputVariablesMap(inputVariablesMap);
             }
         }
@@ -91,8 +89,9 @@ public class WbFlowOrderController {
 
     @GetMapping(value = "/order/info")
     @URIAccess(menuName = "查询单个工单")
-    public ResponseData orderInfo(@RequestParam String orderUuid) {
-        OrderInfoResultDTO info = orderService.info(orderUuid);
+    public ResponseData orderInfo(@RequestParam String orderUuid, @RequestParam(required = false) Boolean includeInvalidInstance) {
+        // includeInvalidInstance==null 时，默认为 true，查询所有步骤实例。执行历史需要查询所有。
+        OrderInfoResultDTO info = orderService.info(orderUuid, includeInvalidInstance);
         return ResponseData.ok(info);
     }
 
@@ -130,8 +129,25 @@ public class WbFlowOrderController {
 
     @PostMapping(value = "/resource/instance/review")
     @URIAccess(menuName = "步骤实例进行审核")
-    public ResponseData reviewInstance(@Valid @RequestBody ReviewResourceInputBO reviewResourceInputBO) {
-        String resourceInstanceUuid = orderService.reviewResourceInstance(reviewResourceInputBO);
+    public ResponseData reviewInstance(@Valid @RequestBody ReviewResourceInputBO inputBO) {
+        if (false) {
+            // 入参样例
+            inputBO.setOrderUuid("954b9844-35fc-41db-a57e-235d1477db8c"); // orderUuid值
+            inputBO.setResourceInstanceUuid("b4a4db35-3767-4aac-a09b-25c1ff502a4c"); // resourceInstanceUuid值。操作步骤的实例唯一标识
+            String loginUserId = "chenyaoting";
+            inputBO.setOperatorId(loginUserId);
+            inputBO.setOperationResult(ReviewOperationResultEnum.PASSED.getNameEn()); // 入参要求为枚举的nameEn：com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum.nameEn
+            inputBO.setOperationMessage("这是我审核的说明语句");
+            inputBO.setOperationSnapshot(null); // 非必填，只做存储。可不传
+        }
+        String resourceInstanceUuid = orderService.reviewResourceInstance(inputBO);
+        return ResponseData.ok(resourceInstanceUuid);
+    }
+
+    @PostMapping(value = "/resource/instance/cancel")
+    @URIAccess(menuName = "步骤实例进行强制废止")
+    public ResponseData cancelOrder(@Valid @RequestBody CancelResourceInputBO inputBO) {
+        String resourceInstanceUuid = orderService.cancelResourceInstance(inputBO);
         return ResponseData.ok(resourceInstanceUuid);
     }
 }

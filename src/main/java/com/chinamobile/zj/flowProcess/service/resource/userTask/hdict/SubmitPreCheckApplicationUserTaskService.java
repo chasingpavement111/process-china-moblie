@@ -2,9 +2,11 @@ package com.chinamobile.zj.flowProcess.service.resource.userTask.hdict;
 
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
-import com.chinamobile.zj.flowProcess.service.InputParam;
-import com.chinamobile.zj.flowProcess.service.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.InheritParam;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.InputParam;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.LimitOperatorRole;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.OutputParam;
 import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
@@ -25,7 +27,14 @@ public class SubmitPreCheckApplicationUserTaskService extends BaseUserTaskServic
     private HdictUserInfoService userInfoService;
 
     @InputParam
+    @InheritParam
     private PreCheckApplication preCheckApplication;
+
+    @OutputParam
+    private Boolean preCheckApplicationPassedByWhiteCollar; // 不赋值，为了避免spel报错才定义的
+
+    @OutputParam
+    private Boolean preCheckApplicationPassedByBlueCollar; // 不赋值，为了避免spel报错才定义的
 
     @Override
     public String getDefinitionKey() {
@@ -73,7 +82,7 @@ public class SubmitPreCheckApplicationUserTaskService extends BaseUserTaskServic
 
     @Override
     public Map<String, String> supportedOperatorRoleMap() {
-        // todo zj 查询详情时，未执行钱返回空
+        // todo zj 查询详情时，未执行前返回空
         return Collections.EMPTY_MAP; // 空集合，标识支持所有类型的用户
     }
 

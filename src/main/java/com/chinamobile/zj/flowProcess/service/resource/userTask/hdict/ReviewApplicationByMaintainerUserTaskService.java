@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
+public class ReviewApplicationByMaintainerUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
 
     @Autowired
     private HdictUserInfoService userInfoService;
@@ -30,37 +30,45 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
     private PreCheckApplication preCheckApplication;
 
     /**
-     * 县HDICT专员转派的家客经理的用户ID
+     * 县铁通HDICT专员转派的装维人员的用户ID
      */
     @InheritParam
-    private String assignedJiaKeCountyManagerId;
+    private String assignedMaintainerId;
 
     @InheritParam
-    private String assignedJiaKeCountyManagerName;
+    private String assignedMaintainerName;
 
     @OutputParam
-    private Boolean preCheckApplicationPassedByWhiteCollar;
+    private Boolean preCheckApplicationPassedByBlueCollar;
+
 
     @Override
     public String getDefinitionKey() {
-        return "review_application_by_county_jia_ke_manager";
+        return "review_application_by_maintainer";
     }
 
     @Override
     public String getDefinitionKeyDesc() {
-        return "家客经理审核预勘需求";
+        return "装维人员审核预勘需求";
     }
 
     @Override
     public ExecutionResult execute() {
         ReviewOperationResultEnum.getByNameEn(getOperationResult()); // 检查必须经过审核
-        preCheckApplicationPassedByWhiteCollar = ReviewOperationResultEnum.PASSED.getNameEn().equals(getOperationResult());
+        if (ReviewOperationResultEnum.REJECTED.getNameEn().equals(getOperationResult())) {
+            // 审核不通过，直接返回
+            preCheckApplicationPassedByBlueCollar = false;
+            return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
+        } else {
+            preCheckApplicationPassedByBlueCollar = true;
+        }
+
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
     }
 
     @Override
     public Map<String, String> supportedOperatorRoleMap() {
-        return Collections.singletonMap("hdict003", "家客经理-县市");
+        return Collections.singletonMap("hdict002", "HDICT装维");
     }
 
     @Override
@@ -68,8 +76,7 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         // 步骤未结束时，status==null
         String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
                 OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
-        return MessageFormat.format("{0}（{1}）对预勘需求申请{2}", getOperatorRoleName(), getOperatorName(),
-                operationStatus);
+        return MessageFormat.format("{0}（{1}）对预勘需求申请进行现场审核{2}", getOperatorRoleName(), getOperatorName(), operationStatus);
     }
 
     @Override
@@ -78,10 +85,13 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        // 只允许被转派家客经理，进行审批。
-        ParamException.isTrue(!assignedJiaKeCountyManagerId.equals(operatorInfo.getLoginId()),
-                String.format("operator[CRMId=%s] is not the jiaKeManager that county hdict user assigned, only user[CRMId=%s] can operator this step!",
-                        getOperatorId(), assignedJiaKeCountyManagerId));
+        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
+                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
+                        operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
+        // 只允许 被指派进行现场审核的装维人员 操作
+        ParamException.isTrue(!assignedMaintainerId.equals(getOperatorId()),
+                String.format("operator[CRMId=%s] is not the county hdict user, only user[CRMId=%s] can operator this step!",
+                        getOperatorId(), assignedMaintainerId));
 
         setOperatorName(operatorInfo.getName());
         setOperatorRoleName(operatorInfo.getRoleName());
@@ -95,27 +105,27 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         this.preCheckApplication = preCheckApplication;
     }
 
-    public String getAssignedJiaKeCountyManagerId() {
-        return assignedJiaKeCountyManagerId;
+    public String getAssignedMaintainerId() {
+        return assignedMaintainerId;
     }
 
-    public void setAssignedJiaKeCountyManagerId(String assignedJiaKeCountyManagerId) {
-        this.assignedJiaKeCountyManagerId = assignedJiaKeCountyManagerId;
+    public void setAssignedMaintainerId(String assignedMaintainerId) {
+        this.assignedMaintainerId = assignedMaintainerId;
     }
 
-    public String getAssignedJiaKeCountyManagerName() {
-        return assignedJiaKeCountyManagerName;
+    public String getAssignedMaintainerName() {
+        return assignedMaintainerName;
     }
 
-    public void setAssignedJiaKeCountyManagerName(String assignedJiaKeCountyManagerName) {
-        this.assignedJiaKeCountyManagerName = assignedJiaKeCountyManagerName;
+    public void setAssignedMaintainerName(String assignedMaintainerName) {
+        this.assignedMaintainerName = assignedMaintainerName;
     }
 
-    public Boolean getPreCheckApplicationPassedByWhiteCollar() {
-        return preCheckApplicationPassedByWhiteCollar;
+    public Boolean getPreCheckApplicationPassedByBlueCollar() {
+        return preCheckApplicationPassedByBlueCollar;
     }
 
-    public void setPreCheckApplicationPassedByWhiteCollar(Boolean preCheckApplicationPassedByWhiteCollar) {
-        this.preCheckApplicationPassedByWhiteCollar = preCheckApplicationPassedByWhiteCollar;
+    public void setPreCheckApplicationPassedByBlueCollar(Boolean preCheckApplicationPassedByBlueCollar) {
+        this.preCheckApplicationPassedByBlueCollar = preCheckApplicationPassedByBlueCollar;
     }
 }

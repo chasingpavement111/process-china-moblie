@@ -1,7 +1,8 @@
-package com.chinamobile.zj.flowProcess.service.resource;
+package com.chinamobile.zj.flowProcess.service.resource.userTask;
 
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
+import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Collections;

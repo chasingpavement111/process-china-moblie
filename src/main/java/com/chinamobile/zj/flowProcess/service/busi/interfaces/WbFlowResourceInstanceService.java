@@ -1,8 +1,9 @@
 package com.chinamobile.zj.flowProcess.service.busi.interfaces;
 
 import com.baomidou.mybatisplus.service.IService;
-import com.chinamobile.zj.flowProcess.bo.dto.FinishResourceResultDTO;
+import com.chinamobile.zj.flowProcess.bo.dto.OperationOnResourceInstanceResultDTO;
 import com.chinamobile.zj.flowProcess.bo.dto.OrderResourceInstanceInfoResultDTO;
+import com.chinamobile.zj.flowProcess.bo.input.CancelResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.CompleteResourceInputBO;
 import com.chinamobile.zj.flowProcess.bo.input.ReviewResourceInputBO;
 import com.chinamobile.zj.flowProcess.entity.WbFlowOrder;
@@ -26,11 +27,13 @@ public interface WbFlowResourceInstanceService extends IService<WbFlowResourceIn
 
     List<String> create(WbFlowOrderDO orderEntity);
 
-    FinishResourceResultDTO review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO);
+    OperationOnResourceInstanceResultDTO cancel(WbFlowOrderDO orderEntityDO, CancelResourceInputBO inputBO);
 
-    FinishResourceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO);
+    OperationOnResourceInstanceResultDTO review(WbFlowOrderDO orderEntity, ReviewResourceInputBO inputBO);
 
-    List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid);
+    OperationOnResourceInstanceResultDTO complete(WbFlowOrderDO orderEntity, CompleteResourceInputBO inputBO);
+
+    List<OrderResourceInstanceInfoResultDTO> getExecutionHistoryByOrderUuid(String orderUuid, Boolean includeInvalidInstance);
 
     BaseUserTaskService getResourceInstanceBean(String resourceInstanceUuid);
 }

@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
+public class CheckOutGoodsUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
 
     @Autowired
     private HdictUserInfoService userInfoService;
@@ -30,37 +30,36 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
     private PreCheckApplication preCheckApplication;
 
     /**
-     * 县HDICT专员转派的家客经理的用户ID
+     * 是否货源充足
      */
-    @InheritParam
-    private String assignedJiaKeCountyManagerId;
-
-    @InheritParam
-    private String assignedJiaKeCountyManagerName;
-
     @OutputParam
-    private Boolean preCheckApplicationPassedByWhiteCollar;
+    private Boolean goodSufficient;
 
     @Override
     public String getDefinitionKey() {
-        return "review_application_by_county_jia_ke_manager";
+        return "check_out_goods";
     }
 
     @Override
     public String getDefinitionKeyDesc() {
-        return "家客经理审核预勘需求";
+        return "铁通出库分配";
     }
 
     @Override
     public ExecutionResult execute() {
-        ReviewOperationResultEnum.getByNameEn(getOperationResult()); // 检查必须经过审核
-        preCheckApplicationPassedByWhiteCollar = ReviewOperationResultEnum.PASSED.getNameEn().equals(getOperationResult());
+        if (ReviewOperationResultEnum.REJECTED.getNameEn().equals(getOperationResult())) {
+            // 审核不通过，直接返回
+            goodSufficient = false;
+            return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
+        }
+        goodSufficient = true;
+
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
     }
 
     @Override
     public Map<String, String> supportedOperatorRoleMap() {
-        return Collections.singletonMap("hdict003", "家客经理-县市");
+        return Collections.singletonMap("hdict018", "铁通仓管");
     }
 
     @Override
@@ -68,7 +67,7 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         // 步骤未结束时，status==null
         String operationStatus = StringUtils.isBlank(getStatus()) ? OrderInstanceStatusEnum.PROCESSING.getNameCh() :
                 OrderInstanceStatusEnum.getByNameEn(getStatus()).getNameCh();
-        return MessageFormat.format("{0}（{1}）对预勘需求申请{2}", getOperatorRoleName(), getOperatorName(),
+        return MessageFormat.format("{0}（{1}）出库分配{2}", getOperatorRoleName(), getOperatorName(),
                 operationStatus);
     }
 
@@ -78,10 +77,9 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        // 只允许被转派家客经理，进行审批。
-        ParamException.isTrue(!assignedJiaKeCountyManagerId.equals(operatorInfo.getLoginId()),
-                String.format("operator[CRMId=%s] is not the jiaKeManager that county hdict user assigned, only user[CRMId=%s] can operator this step!",
-                        getOperatorId(), assignedJiaKeCountyManagerId));
+        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
+                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
+                        operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
 
         setOperatorName(operatorInfo.getName());
         setOperatorRoleName(operatorInfo.getRoleName());
@@ -95,27 +93,11 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends BaseUs
         this.preCheckApplication = preCheckApplication;
     }
 
-    public String getAssignedJiaKeCountyManagerId() {
-        return assignedJiaKeCountyManagerId;
+    public Boolean getGoodSufficient() {
+        return goodSufficient;
     }
 
-    public void setAssignedJiaKeCountyManagerId(String assignedJiaKeCountyManagerId) {
-        this.assignedJiaKeCountyManagerId = assignedJiaKeCountyManagerId;
-    }
-
-    public String getAssignedJiaKeCountyManagerName() {
-        return assignedJiaKeCountyManagerName;
-    }
-
-    public void setAssignedJiaKeCountyManagerName(String assignedJiaKeCountyManagerName) {
-        this.assignedJiaKeCountyManagerName = assignedJiaKeCountyManagerName;
-    }
-
-    public Boolean getPreCheckApplicationPassedByWhiteCollar() {
-        return preCheckApplicationPassedByWhiteCollar;
-    }
-
-    public void setPreCheckApplicationPassedByWhiteCollar(Boolean preCheckApplicationPassedByWhiteCollar) {
-        this.preCheckApplicationPassedByWhiteCollar = preCheckApplicationPassedByWhiteCollar;
+    public void setGoodSufficient(Boolean goodSufficient) {
+        this.goodSufficient = goodSufficient;
     }
 }

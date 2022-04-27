@@ -1,4 +1,4 @@
-package com.chinamobile.zj.flowProcess.service;
+package com.chinamobile.zj.flowProcess.service.resource.userTask;
 
 /**
  * 步骤的操作人权限有限制，需要做权限检查

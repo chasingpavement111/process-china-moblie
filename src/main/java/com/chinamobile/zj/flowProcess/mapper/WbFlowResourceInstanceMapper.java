@@ -25,7 +25,7 @@ public interface WbFlowResourceInstanceMapper extends BaseMapper<WbFlowResourceI
 
     int updateLatterInstance(@Param("entity") WbFlowResourceInstance updateInstanceEntity);
 
-    List<WbFlowResourceInstanceDO> getInstanceByOrderUuid(@Param("orderUuid") String orderUuid, @Param("instanceStatus") String instanceStatus);
+    List<WbFlowResourceInstanceDO> getInstanceByOrderUuid(@Param("orderUuid") String orderUuid, @Param("instanceStatus") String instanceStatus, @Param("includeInvalidInstance") Boolean includeInvalidInstance);
 
     WbFlowResourceInstanceDO getInstanceByInstanceUuid(@Param("resourceInstanceUuid") String resourceInstanceUuid);
 

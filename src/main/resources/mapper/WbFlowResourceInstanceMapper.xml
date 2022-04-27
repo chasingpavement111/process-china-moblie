@@ -62,7 +62,6 @@
     <update id="invalidateInstance">
         update wb_flow_resource_instance r
         set r.valid = false
-        <!--set r.valid = '0'-->
         where r.resource_instance_uuid in
         <foreach collection="instanceUuidList" separator="," open="(" close=")" item="item">
             #{item}
@@ -75,6 +74,9 @@
         where r.order_uuid = #{orderUuid}
         <if test="instanceStatus!=null and instanceStatus!=''">
             and r.status = #{instanceStatus}
+        </if>
+        <if test="includeInvalidInstance!=null and includeInvalidInstance==false">
+            and r.valid = true
         </if>
         order by r.create_time asc
     </select>
