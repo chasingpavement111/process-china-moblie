@@ -4,11 +4,8 @@ import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
-import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
 import com.chinamobile.zj.flowProcess.service.resource.userTask.InheritParam;
-import com.chinamobile.zj.flowProcess.service.resource.userTask.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.resource.userTask.OutputParam;
-import com.chinamobile.zj.flowProcess.service.resource.userTask.ReviewTask;
 import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
 import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
@@ -21,7 +18,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class ReviewPlanByCollarLeaderUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
+public class ReviewPlanByCollarLeaderUserTaskService extends AbstractHdictReviewUserTaskService {
 
     @Autowired
     private HdictUserInfoService userInfoService;

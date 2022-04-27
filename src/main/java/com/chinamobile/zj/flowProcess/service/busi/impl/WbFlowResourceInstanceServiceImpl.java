@@ -325,7 +325,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         String orderUuid = orderEntity.getOrderUuid();
         List<WbFlowResourceInstance> outGoingInstanceEntity = new ArrayList<>();
 
-        String inputVariablesStr = Objects.isNull(inputVariablesMap) ? null : JsonConvertUtil.toJsonString(inputVariablesMap);
+        String inputVariablesStr = Objects.isNull(inputVariablesMap) ? null : JsonConvertUtil.toJsonStringWithMapNullValue(inputVariablesMap);
         String createTimeStr = DateUtil.format(new Date(), DateUtil.DATE_TIME_REGEX);
 
         outGoingResourceDefinitionBOList.forEach(resourceDefinitionBO -> {

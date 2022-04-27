@@ -272,7 +272,9 @@ public abstract class BaseUserTaskService extends BaseResourceService implements
             }
             ResourceDefinitionBO sequenceDefinitionBO = outGoingResource;
             ResourceDefinitionBO nextOutGoing = getNextOutGoingExecutionResourceBySequence(sequenceDefinitionBO, outputVariablesMap);
-            nextOutGoingList.add(nextOutGoing);
+            if (Objects.nonNull(nextOutGoing)) {
+                nextOutGoingList.add(nextOutGoing);
+            }
         }
         // userTask 的下一跳，可能有多个；todo zj 可能吗？
         // finalNextOutGoing == null 的两种情况：

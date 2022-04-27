@@ -93,7 +93,7 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
 
     @Transactional
     @Override
-    public String create(CreateFlowOrderDTO createOrderDTO, boolean startNow) {
+    public String create(CreateFlowOrderDTO createOrderDTO) {
         ParamException.isTrue(Objects.isNull(createOrderDTO), "inputParam[createOrderDTO] should not be null!");
         // 所有人都可以创建工单。只校验用户有效性
         Optional<WgUserInfo> userInfoEntityOpt = userInfoService.getByUserCRMId(createOrderDTO.getCreatorId());
@@ -106,7 +106,12 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
 
         orderEntityDO.setOrderUuid(UUID.randomUUID().toString());
         orderEntityDO.setCreateTime(DateUtil.format(new Date(), DateUtil.DATE_TIME_REGEX));
-        orderEntityDO.setStatus(OrderStatusEnum.READY.getNameEn());
+        if (BooleanUtils.isFalse(createOrderDTO.getStartNow())) {
+            orderEntityDO.setStatus(OrderStatusEnum.READY.getNameEn());
+        } else {
+            // 默认自动启动
+            orderEntityDO.setStatus(OrderStatusEnum.PROCESSING.getNameEn());
+        }
 
         WbFlowDefinition flowDefinitionEntity = definitionService.getNewestByFlowDefinitionKey(createOrderDTO.getFlowDefinitionKey());
         orderEntityDO.setFlowDefinitionVersion(flowDefinitionEntity.getFlowDefinitionVersion());
@@ -234,7 +239,7 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
         if (MapUtils.isNotEmpty(outputVariablesMapOfInstance)) {
             variablesMap.putAll(outputVariablesMapOfInstance);
         }
-        updateOrderEntity.setInputVariables(JsonConvertUtil.toJsonString(variablesMap));
+        updateOrderEntity.setInputVariables(JsonConvertUtil.toJsonStringWithMapNullValue(variablesMap));
 
         int updateCount = orderMapper.updateOrderAfterOperation(updateOrderEntity);
         InternalException.isTrue(1 != updateCount,

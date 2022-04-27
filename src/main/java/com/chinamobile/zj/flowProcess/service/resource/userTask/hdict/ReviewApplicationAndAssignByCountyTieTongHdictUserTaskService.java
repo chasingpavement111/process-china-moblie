@@ -4,27 +4,18 @@ import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
-import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
-import com.chinamobile.zj.flowProcess.service.resource.userTask.*;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.InputParam;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.OutputParam;
 import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
-import com.chinamobile.zj.hdict.entity.PreCheckApplication;
-import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class ReviewApplicationAndAssignByCountyTieTongHdictUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
-
-    @Autowired
-    private HdictUserInfoService userInfoService;
-
-    @InheritParam
-    private PreCheckApplication preCheckApplication;
+public class ReviewApplicationAndAssignByCountyTieTongHdictUserTaskService extends AbstractHdictReviewUserTaskService {
 
     /**
      * 县铁通HDICT专员转派进行现场审查的装维人员的用户ID
@@ -67,11 +58,11 @@ public class ReviewApplicationAndAssignByCountyTieTongHdictUserTaskService exten
         ParamException.isTrue(StringUtils.isBlank(assignedMaintainerId),
                 String.format("inputParam[assignedMaintainerId] should not be blank"));
         // 检查用户指定的装维人员：角色、归属县市
-        Optional<HdictUserInfoDO> maintainerInfoOpt = userInfoService.getByUserCRMId(assignedMaintainerId);
+        Optional<HdictUserInfoDO> maintainerInfoOpt = getUserInfoService().getByUserCRMId(assignedMaintainerId);
         ParamException.isTrue(BooleanUtils.isNotTrue(maintainerInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO maintainerInfo = maintainerInfoOpt.get();
-        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(maintainerInfo.getAreaId3()) && "hdict002".equals(maintainerInfo.getRoleId())),
+        ParamException.isTrue(BooleanUtils.isNotTrue(getPreCheckApplication().getAreaId3().equals(maintainerInfo.getAreaId3()) && "hdict002".equals(maintainerInfo.getRoleId())),
                 String.format("user[CRMId=%s, areaId3=%s, roleName=%s] is not a valid target user!", maintainerInfo.getLoginId(), maintainerInfo.getAreaId3(), maintainerInfo.getRoleName()));
         setAssignedMaintainerName(maintainerInfo.getName());
         return new ExecutionResult(ExecutionResult.RESULT_CODE.SUCCESS);
@@ -92,25 +83,9 @@ public class ReviewApplicationAndAssignByCountyTieTongHdictUserTaskService exten
 
     @Override
     public void checkOperatorAccessRight() {
-        Optional<HdictUserInfoDO> operatorInfoOpt = userInfoService.getByUserCRMId(getOperatorId());
-        ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
-                String.format("invalid userId[%s], user not exist.", getOperatorId()));
-        HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
-                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
-                        operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
+        super.checkOperatorAccessRight();
 
-        setOperatorName(operatorInfo.getName());
-        setOperatorRoleName(operatorInfo.getRoleName());
         setCountyTieTongHdictUserId(getOperatorId());
-    }
-
-    public PreCheckApplication getPreCheckApplication() {
-        return preCheckApplication;
-    }
-
-    public void setPreCheckApplication(PreCheckApplication preCheckApplication) {
-        this.preCheckApplication = preCheckApplication;
     }
 
     public Boolean getPreCheckApplicationPassedByCountyTieTongHdict() {

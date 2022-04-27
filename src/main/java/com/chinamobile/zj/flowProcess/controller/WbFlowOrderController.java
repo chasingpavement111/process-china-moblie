@@ -56,7 +56,7 @@ public class WbFlowOrderController {
                 createOrderDTO.setInputVariablesMap(inputVariablesMap);
             }
         }
-        String orderUuid = orderService.create(createOrderDTO, true);
+        String orderUuid = orderService.create(createOrderDTO);
         return ResponseData.ok(orderUuid);
     }
 

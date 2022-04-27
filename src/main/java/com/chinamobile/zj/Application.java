@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,6 +81,10 @@ public class Application {
         Map<String, Class<? extends BaseUserTaskService>> definitionKey2BaseUserTaskServiceClass = new HashMap<>();
 //        Map<String, Class<?>> definitionKey2BaseUserTaskServiceClass = new HashMap<>();
         for (Class<?> subType : subTypes) {
+            if (Modifier.isAbstract(subType.getModifiers())) {
+                // 忽略抽象类
+                continue;
+            }
             String instanceDefinitionKey = ((BaseUserTaskService) subType.newInstance()).getDefinitionKey();
             definitionKey2BaseUserTaskServiceClass.put(instanceDefinitionKey, (Class<BaseUserTaskService>) subType);
 

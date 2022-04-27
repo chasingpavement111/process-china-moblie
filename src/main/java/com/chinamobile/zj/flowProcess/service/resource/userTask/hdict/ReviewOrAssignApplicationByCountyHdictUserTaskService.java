@@ -5,25 +5,17 @@ import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.flowProcess.bo.ExecutionResult;
 import com.chinamobile.zj.flowProcess.enums.OrderInstanceStatusEnum;
 import com.chinamobile.zj.flowProcess.enums.ReviewOperationResultEnum;
-import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
-import com.chinamobile.zj.flowProcess.service.resource.userTask.*;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.InputParam;
+import com.chinamobile.zj.flowProcess.service.resource.userTask.OutputParam;
 import com.chinamobile.zj.hdict.entity.HdictUserInfoDO;
 import com.chinamobile.zj.hdict.entity.PreCheckApplication;
-import com.chinamobile.zj.hdict.service.interfaces.HdictUserInfoService;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.MessageFormat;
 import java.util.*;
 
-public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseUserTaskService implements LimitOperatorRole, ReviewTask {
-
-    @Autowired
-    private HdictUserInfoService userInfoService;
-
-    @InheritParam
-    private PreCheckApplication preCheckApplication;
+public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends AbstractHdictReviewUserTaskService {
 
     @OutputParam
     private Boolean hasCountyManager;
@@ -58,11 +50,13 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 
     @Override
     public ExecutionResult execute() {
+
+        PreCheckApplication preCheckApplication = getPreCheckApplication();
         ParamException.isTrue(Objects.isNull(preCheckApplication) || StringUtils.isBlank(preCheckApplication.getAreaId3()),
                 String.format("inputParam[preCheckApplication.areaId3] should not be blank"));
 
         // 必须设置 hasCountyManager，否则流程走向无法判断
-        List<HdictUserInfoDO> jiaKeManagerInfoList = userInfoService.listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
+        List<HdictUserInfoDO> jiaKeManagerInfoList = getUserInfoService().listByUserRoleId(preCheckApplication.getAreaId3(), "hdict003"); // roleId='hdict003', roleName='家客经理-县市'
         setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
         if (Boolean.TRUE.equals(getHasCountyManager())) {
             // 不允许审核驳回，必须进行转派。
@@ -73,7 +67,7 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
             ParamException.isTrue(StringUtils.isBlank(assignedJiaKeCountyManagerId),
                     String.format("inputParam[assignedJiaKeCountyManagerId] should not be blank"));
             // 检查用户指定的家客经理：角色、归属县市
-            Optional<HdictUserInfoDO> jiaKeManagerInfoOpt = userInfoService.getByUserCRMId(assignedJiaKeCountyManagerId);
+            Optional<HdictUserInfoDO> jiaKeManagerInfoOpt = getUserInfoService().getByUserCRMId(assignedJiaKeCountyManagerId);
             ParamException.isTrue(BooleanUtils.isNotTrue(jiaKeManagerInfoOpt.isPresent()),
                     String.format("invalid userId[%s], user not exist.", getOperatorId()));
             HdictUserInfoDO jiaKeManagerInfo = jiaKeManagerInfoOpt.get();
@@ -103,16 +97,8 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
 
     @Override
     public void checkOperatorAccessRight() {
-        Optional<HdictUserInfoDO> operatorInfoOpt = userInfoService.getByUserCRMId(getOperatorId());
-        ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
-                String.format("invalid userId[%s], user not exist.", getOperatorId()));
-        HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        ParamException.isTrue(BooleanUtils.isNotTrue(preCheckApplication.getAreaId3().equals(operatorInfo.getAreaId3()) && supportedOperatorRoleMap().containsKey(operatorInfo.getRoleId())),
-                String.format("user[CRMId=%s, areaId3=%s, roleName=%s] doesn't have access to operate this step!",
-                        operatorInfo.getLoginId(), operatorInfo.getAreaId3(), operatorInfo.getRoleName()));
+        super.checkOperatorAccessRight();
 
-        setOperatorName(operatorInfo.getName());
-        setOperatorRoleName(operatorInfo.getRoleName());
         setCountyHdictUserId(getOperatorId());
     }
 
@@ -134,14 +120,6 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends BaseU
             return MessageFormat.format("{0}（{1}）对预勘需求审核{2}",
                     getOperatorRoleName(), getOperatorName(), operationStatus);
         }
-    }
-
-    public PreCheckApplication getPreCheckApplication() {
-        return preCheckApplication;
-    }
-
-    public void setPreCheckApplication(PreCheckApplication preCheckApplication) {
-        this.preCheckApplication = preCheckApplication;
     }
 
     public Boolean getHasCountyManager() {

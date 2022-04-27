@@ -23,10 +23,9 @@ public interface WbFlowOrderService extends IService<WbFlowOrder> {
      * 创建流程工单
      *
      * @param createOrderDTO
-     * @param startNow       流转是否立即开始执行： true(立即启动)\false(不，此时需要手动启动，使流程开始执行)
      * @return orderUuid
      */
-    String create(CreateFlowOrderDTO createOrderDTO, boolean startNow);
+    String create(CreateFlowOrderDTO createOrderDTO);
 
     String start(StartFlowOrderDTO startOrderDTO);
 

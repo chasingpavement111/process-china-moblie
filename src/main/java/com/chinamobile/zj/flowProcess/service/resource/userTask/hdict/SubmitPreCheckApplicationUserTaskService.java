@@ -107,4 +107,20 @@ public class SubmitPreCheckApplicationUserTaskService extends BaseUserTaskServic
     public void setPreCheckApplication(PreCheckApplication preCheckApplication) {
         this.preCheckApplication = preCheckApplication;
     }
+
+    public Boolean getPreCheckApplicationPassedByWhiteCollar() {
+        return preCheckApplicationPassedByWhiteCollar;
+    }
+
+    public void setPreCheckApplicationPassedByWhiteCollar(Boolean preCheckApplicationPassedByWhiteCollar) {
+        this.preCheckApplicationPassedByWhiteCollar = preCheckApplicationPassedByWhiteCollar;
+    }
+
+    public Boolean getPreCheckApplicationPassedByBlueCollar() {
+        return preCheckApplicationPassedByBlueCollar;
+    }
+
+    public void setPreCheckApplicationPassedByBlueCollar(Boolean preCheckApplicationPassedByBlueCollar) {
+        this.preCheckApplicationPassedByBlueCollar = preCheckApplicationPassedByBlueCollar;
+    }
 }
