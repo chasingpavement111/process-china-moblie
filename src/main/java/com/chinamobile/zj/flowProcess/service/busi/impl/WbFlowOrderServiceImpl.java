@@ -21,7 +21,7 @@ import com.chinamobile.zj.flowProcess.service.busi.interfaces.WbFlowResourceInst
 import com.chinamobile.zj.flowProcess.service.definition.FlowDefinitionResourceService;
 import com.chinamobile.zj.flowProcess.service.definition.FlowService;
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
-import com.chinamobile.zj.service.interfaces.user.WgUserInfoService;
+import com.chinamobile.zj.service.interfaces.user.WgUserInfoInCamelFormatService;
 import com.chinamobile.zj.util.DateUtil;
 import com.chinamobile.zj.util.JsonConvertUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -63,7 +63,7 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
     private WbFlowResourceInstanceService instanceService;
 
     @Autowired
-    private WgUserInfoService userInfoService;
+    private WgUserInfoInCamelFormatService userInfoService;
 
     @Autowired
     private ApplicationContext context;

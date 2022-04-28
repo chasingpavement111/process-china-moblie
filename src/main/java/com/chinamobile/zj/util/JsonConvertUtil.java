@@ -7,7 +7,6 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 /**
  * 统一序列化方法，避免fastjson、Jackson混用
  * 规范序列化方法，如泛型
- * // todo zj git 需要修改该文件
  */
 public class JsonConvertUtil {
 

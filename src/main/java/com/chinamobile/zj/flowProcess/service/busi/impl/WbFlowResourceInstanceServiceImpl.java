@@ -28,7 +28,7 @@ import com.chinamobile.zj.flowProcess.service.resource.BaseStartNoneEventService
 import com.chinamobile.zj.flowProcess.service.resource.BaseUserTaskService;
 import com.chinamobile.zj.flowProcess.service.resource.userTask.LimitOperatorRole;
 import com.chinamobile.zj.flowProcess.service.resource.userTask.ReviewTask;
-import com.chinamobile.zj.service.interfaces.user.WgUserInfoService;
+import com.chinamobile.zj.service.interfaces.user.WgUserInfoInCamelFormatService;
 import com.chinamobile.zj.util.DateUtil;
 import com.chinamobile.zj.util.JsonConvertUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -64,7 +64,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
     private WbFlowResourceInstanceMapper instanceMapper;
 
     @Autowired
-    private WgUserInfoService userInfoService;
+    private WgUserInfoInCamelFormatService userInfoService;
 
     @Autowired
     private ApplicationContext context;

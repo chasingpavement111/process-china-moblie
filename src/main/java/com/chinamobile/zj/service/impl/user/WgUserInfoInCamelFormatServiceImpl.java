@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.chinamobile.zj.comm.ParamException;
 import com.chinamobile.zj.entity.user.WgUserInfo;
 import com.chinamobile.zj.mapper.user.WgUserInfoInCamelFormatMapper;
-import com.chinamobile.zj.service.interfaces.user.WgUserInfoService;
+import com.chinamobile.zj.service.interfaces.user.WgUserInfoInCamelFormatService;
 import com.chinamobile.zj.util.Constants;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import java.util.Optional;
  */
 @Service
 @Primary
-public class WgUserInfoServiceImpl extends ServiceImpl<WgUserInfoInCamelFormatMapper, WgUserInfo> implements WgUserInfoService {
+public class WgUserInfoInCamelFormatServiceImpl extends ServiceImpl<WgUserInfoInCamelFormatMapper, WgUserInfo> implements WgUserInfoInCamelFormatService {
 
     @Autowired
     private WgUserInfoInCamelFormatMapper userInfoMapper;

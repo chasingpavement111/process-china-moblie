@@ -47,7 +47,7 @@ public class GlobalException extends RuntimeException {
         this.code = code;
     }
 
-    public GlobalException(String message, int code, Throwable cause) { // todo zj git 需要新增该行
+    public GlobalException(String message, int code, Throwable cause) {
         super(message, cause);
         this.code = code;
         this.msg = message;

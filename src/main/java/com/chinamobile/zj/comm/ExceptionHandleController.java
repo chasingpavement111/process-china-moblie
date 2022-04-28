@@ -43,7 +43,7 @@ public class ExceptionHandleController {
         if (StringUtils.isBlank(ex.getMsg())) {
             return ResponseData.fail("No message available");
         }
-        return ResponseData.fail(ex.getMsg(), ex.getCode()); // todo zj git 需要修改该行
+        return ResponseData.fail(ex.getMsg(), ex.getCode());
     }
 
 }

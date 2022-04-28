@@ -1,6 +1,5 @@
 package com.chinamobile.zj.comm;
 
-// todo zj git 需要新增该文件
 public class InternalException extends GlobalException {
 
     public InternalException(Throwable cause) {

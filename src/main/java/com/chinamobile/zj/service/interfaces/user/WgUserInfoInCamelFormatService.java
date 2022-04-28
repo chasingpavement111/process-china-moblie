@@ -13,7 +13,7 @@ import java.util.Optional;
  * @author zhangjie
  * @since 2022-01-20
  */
-public interface WgUserInfoService extends IService<WgUserInfo> {
+public interface WgUserInfoInCamelFormatService extends IService<WgUserInfo> {
 
     Optional<WgUserInfo> getByUserCRMId(String userCRMId);
 }
