@@ -60,7 +60,7 @@ public class ReviewOrAssignApplicationByCountyHdictUserTaskService extends Abstr
         setHasCountyManager(CollectionUtils.isNotEmpty(jiaKeManagerInfoList));
         if (Boolean.TRUE.equals(getHasCountyManager())) {
             // 不允许审核驳回，必须进行转派。
-            preCheckApplicationPassedByWhiteCollar = false;
+            preCheckApplicationPassedByWhiteCollar = null; // 县下有家客经理，故县hdict不能做审核，必须为null。不然一定条件下会影响后面的流程流转
             ParamException.isTrue(ReviewOperationResultEnum.REJECTED.getNameEn().equals(getOperationResult()),
                     String.format("county[areaId3=%s] has jiaKeManager, not allowed to do reject operation", preCheckApplication.getAreaId3()));
             // 该县不存在家客经理，必须进行转派。转派对象不能为空

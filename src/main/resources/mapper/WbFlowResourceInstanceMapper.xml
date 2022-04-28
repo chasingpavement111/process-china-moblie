@@ -76,7 +76,7 @@
             and r.status = #{instanceStatus}
         </if>
         <if test="includeInvalidInstance!=null and includeInvalidInstance==false">
-            and r.valid = true
+            and r.valid = '1'
         </if>
         order by r.create_time asc
     </select>
