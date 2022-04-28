@@ -13,6 +13,11 @@ public class OperationOnResourceInstanceResultDTO {
 
     private String instanceUuid;
 
+    /**
+     * true: 流程到达终点。流程结束
+     */
+    private Boolean flowReachToEnd;
+
     private List<String> outGoingInstanceUuidList;
 
     /**

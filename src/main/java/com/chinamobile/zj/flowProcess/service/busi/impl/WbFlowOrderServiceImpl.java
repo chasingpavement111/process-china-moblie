@@ -188,9 +188,8 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
         ParamException.isTrue(!OrderStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(orderEntityDO.getStatus()),
                 String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
 
-        OperationOnResourceInstanceResultDTO resultDTO = instanceService.cancel(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
+        OperationOnResourceInstanceResultDTO resultDTO = instanceService.cancel(orderEntityDO, inputBO);
         updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), OrderStatusEnum.CANCELED);
-        // todo zj 工单结束
         return resultDTO.getInstanceUuid();
     }
 
@@ -205,8 +204,8 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
                 String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
 
         OperationOnResourceInstanceResultDTO resultDTO = instanceService.review(orderEntityDO, inputBO);
-        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
-        // todo zj 工单结束，更新工单状态为finished
+        OrderStatusEnum orderStatusEnum = BooleanUtils.isTrue(resultDTO.getFlowReachToEnd()) ? OrderStatusEnum.FINISHED : null; // resultDTO.getFlowReachToEnd() == true 表示 工单结束
+        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), orderStatusEnum);
         return resultDTO.getInstanceUuid();
     }
 
@@ -220,8 +219,9 @@ public class WbFlowOrderServiceImpl extends ServiceImpl<WbFlowOrderMapper, WbFlo
                 String.format("order status is [%s], not allowed to do change operation.", orderEntityDO.getStatus()));
 
         OperationOnResourceInstanceResultDTO resultDTO = instanceService.complete(orderEntityDO, inputBO); // todo zj 不同入参的完成接口，可以拆分成具体业务接口方便限制入参？？？
-        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), null);
-        // todo zj 工单结束
+
+        OrderStatusEnum orderStatusEnum = BooleanUtils.isTrue(resultDTO.getFlowReachToEnd()) ? OrderStatusEnum.FINISHED : null; // resultDTO.getFlowReachToEnd() == true 表示 工单结束
+        updateOrderAfterOperation(orderEntityDO, inputBO.getOperatorId(), resultDTO.getOutputVariablesMap(), orderStatusEnum);
         return resultDTO.getInstanceUuid();
     }
 

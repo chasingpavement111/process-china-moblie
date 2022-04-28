@@ -13,7 +13,7 @@ import java.util.Map;
 public class ReviewPlanByCityHdictUserTaskService extends AbstractHdictReviewUserTaskService {
 
     @OutputParam
-    private Boolean cityHdictUserId;
+    private String cityHdictUserId;
 
     @OutputParam
     private Boolean planPassedByWhiteCollar;
@@ -59,14 +59,14 @@ public class ReviewPlanByCityHdictUserTaskService extends AbstractHdictReviewUse
     public void checkOperatorAccessRight() {
         super.checkOperatorAccessRight();
 
-        setCityHdictUserId(cityHdictUserId);
+        setCityHdictUserId(getOperatorId());
     }
 
-    public Boolean getCityHdictUserId() {
+    public String getCityHdictUserId() {
         return cityHdictUserId;
     }
 
-    public void setCityHdictUserId(Boolean cityHdictUserId) {
+    public void setCityHdictUserId(String cityHdictUserId) {
         this.cityHdictUserId = cityHdictUserId;
     }
 

@@ -70,7 +70,7 @@ public class ReviewApplicationByMaintainerUserTaskService extends AbstractHdictR
 
         // 只允许 被指派进行现场审核的装维人员 操作
         ParamException.isTrue(!assignedMaintainerId.equals(getOperatorId()),
-                String.format("operator[CRMId=%s] is not the county hdict user, only user[CRMId=%s] can operator this step!",
+                String.format("operator[CRMId=%s] is not the assigned wcounty hdict user, only user[CRMId=%s] can operator this step!",
                         getOperatorId(), assignedMaintainerId));
     }
 

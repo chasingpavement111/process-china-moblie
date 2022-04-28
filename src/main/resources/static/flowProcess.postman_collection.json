@@ -1,0 +1,882 @@
+{
+	"info": {
+		"_postman_id": "8dd3e792-5887-4c34-a64b-9f58ab9d893d",
+		"name": "流程系统",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "流程系统",
+			"item": [
+				{
+					"name": "预勘流程的各步骤的接口请求样例",
+					"item": [
+						{
+							"name": "县HDICT专员进行指派家客经理进行审核或审核预勘需求",
+							"item": [
+								{
+									"name": "完成步骤实例 --县HDICT专员进行指派家客经理进行审核或审核预勘需求 - 指定转派的家客经理",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"d0177a2f-2881-4d8c-a071-c973584760b7\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationSnapshot\": \"{\\\"assignedJiaKeCountyManagerId\\\": \\\"zhoulianghong\\\"}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"complete"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "步骤实例进行审核 pass --县HDICT专员进行指派家客经理进行审核或审核预勘需求 -- 审核无需入参",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"393428a0-5936-4495-b714-8a5c67ca4094\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"review"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "步骤实例进行审核 reject --县HDICT专员进行指派家客经理进行审核或审核预勘需求 -- 审核无需入参",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"393428a0-5936-4495-b714-8a5c67ca4094\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationResult\": \"reject\",\r\n    \"operationMessage\": \"这是我审核驳回的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"review"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "县铁通HDICT专员审核预勘需求与并对现场审核进行派单",
+							"item": [
+								{
+									"name": "完成步骤实例 --县铁通HDICT专员审核预勘需求与并对现场审核进行派单- 指定转派的装维人员",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"8c5eb5e7-e7ec-4453-beae-9e91789e844e\",\r\n    \"operatorId\": \"wuye6\",\r\n    \"operationSnapshot\": \"{\\\"assignedMaintainerId\\\": \\\"wbqianyuancong\\\"}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"complete"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "步骤实例进行审核 pass --县HDICT专员进行指派家客经理进行审核或审核预勘需求 -- 审核无需入参",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"393428a0-5936-4495-b714-8a5c67ca4094\",\r\n    \"operatorId\": \"wuye6\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"review"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "步骤实例进行审核 reject --县HDICT专员进行指派家客经理进行审核或审核预勘需求 -- 审核无需入参",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"393428a0-5936-4495-b714-8a5c67ca4094\",\r\n    \"operatorId\": \"wuye6\",\r\n    \"operationResult\": \"reject\",\r\n    \"operationMessage\": \"这是我审核驳回的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+											"host": [
+												"{{local_uri_phone}}"
+											],
+											"path": [
+												"flow",
+												"resource",
+												"instance",
+												"review"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "完成步骤实例 - 无需入参的完成 -- 提交申请",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"6984dd61-d6f1-4c40-b91f-aa86d0c30ac4\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"complete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "废弃-见文件夹中的示例-县HDICT专员进行指派家客经理进行审核或审核预勘需求",
+							"request": {
+								"method": "LOCK",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"d998ae37-531e-4c4b-ac7b-2775b5ccc2c8\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": \"{\\\"assignedJiaKeCountyManagerId\\\": \\\"zhoulianghong\\\"}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 -- 被指派现场审核的家客经理审核",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"99ccc7a9-5d43-47da-b64b-d9e408b8e4db\",\r\n    \"operatorId\": \"zhoulianghong\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "废弃-见文件夹中的示例-- 县铁通HDICT专员审核预勘需求与并对现场审核进行派单",
+							"request": {
+								"method": "LOCK",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"8cebbdfd-ae4d-454e-999a-abc81c670517\",\r\n    \"operatorId\": \"wuye6\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": \"{\\\"assignedMaintainerId\\\": \\\"wbqianyuancong\\\"}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 -- 装维预勘",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"a5e01fb1-5a61-46e8-92e8-a00b6f011028\",\r\n    \"operatorId\": \"wbqianyuancong\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "完成步骤实例 - 无需入参的完成 - 提交方案",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"99c4525d-4b95-41f9-8aa4-1b518b277e7e\",\r\n    \"operatorId\": \"zhoulianghong\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"complete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 县hdict审核方案",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"b044a51b-4f64-4f8a-8adb-f2f3c46b44ec\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 市家客经理审核方案",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"47e8069d-10af-42b8-a6cc-45bc1f7389e4\",\r\n    \"operatorId\": \"dongyinjia\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 县市场部经理审批",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"efb35663-03bc-44ed-9a3d-c86b18fec074\",\r\n    \"operatorId\": \"yuxiaowei\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 县分管审批",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"8ea133ef-614f-4dcd-8f33-36c00b1bed17\",\r\n    \"operatorId\": \"wenlin\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 市HDICT督导审批方案",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"455492ea-bbd4-4b4c-bde3-4bcc822a4ed1\",\r\n    \"operatorId\": \"wangwangjun\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 - 铁通出库分配",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"287abbe4-fd71-4833-af99-18054b362844\",\r\n    \"operatorId\": \"zhangkaili4\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "完成步骤实例 -- 县铁通HDICT专员对施工任务进行派单",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"66460db2-fbf1-4282-99cd-5bdb36d62894\",\r\n    \"operatorId\": \"wuye6\",\r\n    \"operationSnapshot\": \"{\\\"assignedConstructorId\\\": \\\"chenxiaoyong4\\\"}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"complete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 -装维人员审核现场与施工",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"ac43e3de-d850-4299-a146-756192ee722d\",\r\n    \"operatorId\": \"chenxiaoyong4\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 -县HDICT专员审核施工与提交验收资料",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"ed984558-4a10-4388-b740-83346670f333\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "步骤实例进行审核 -- 无需入参的审核 -市HDICT督导审核验收",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"261faede-f4d8-4660-abe9-3c4a2b0f7de7\",\r\n    \"operatorId\": \"wangwangjun\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+									"host": [
+										"{{local_uri_phone}}"
+									],
+									"path": [
+										"flow",
+										"resource",
+										"instance",
+										"review"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "创建工单",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseJson = pm.response.json();\r",
+									"pm.collectionVariables.set(\"orderUuid\", responseJson.data); //设置成环境变量，作为后面请求的入参"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"startNow\": true,\r\n    \"flowDefinitionKey\": \"check_install_process\",\r\n    \"creatorId\": \"chenyaoting\",\r\n    \"inputVariablesMap\": {\r\n        \"preCheckApplication\": {\r\n            \"areaId3\": \"84\",\r\n            \"creatorId\": \"chenyaoting\"\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/order/create",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"order",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "启动单个工单",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationSnapshot\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/order/start",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"order",
+								"start"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "查询单个工单",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/order/info?orderUuid={{orderUuid}}&includeInvalidInstance=false",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"order",
+								"info"
+							],
+							"query": [
+								{
+									"key": "orderUuid",
+									"value": "{{orderUuid}}"
+								},
+								{
+									"key": "includeInvalidInstance",
+									"value": "false",
+									"description": "false时查询有效节点"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "待开发--强制废止步骤实例 - 会同时废止整个工单",
+					"request": {
+						"method": "LOCK",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"a1e817a9-5017-4eef-98ad-a97d707520e8\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationSnapshot\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/resource/instance/cancel",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"resource",
+								"instance",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "完成步骤实例 - 无需入参的完成",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"a1e817a9-5017-4eef-98ad-a97d707520e8\",\r\n    \"operatorId\": \"chenyaoting\",\r\n    \"operationSnapshot\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/resource/instance/complete",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"resource",
+								"instance",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "步骤实例进行审核 -- 无需入参的审核",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderUuid\": \"{{orderUuid}}\",\r\n    \"resourceInstanceUuid\": \"c821541c-c117-4d90-99a6-ef63a326f2d1\",\r\n    \"operatorId\": \"wbqianyuancong\",\r\n    \"operationResult\": \"pass\",\r\n    \"operationMessage\": \"这是我审核通过的原因\",\r\n    \"operationSnapshot\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_uri_phone}}/flow/resource/instance/review",
+							"host": [
+								"{{local_uri_phone}}"
+							],
+							"path": [
+								"flow",
+								"resource",
+								"instance",
+								"review"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "local_uri_phone",
+			"value": ""
+		},
+		{
+			"key": "orderUuid",
+			"value": ""
+		}
+	]
+}

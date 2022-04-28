@@ -95,15 +95,11 @@ public class WbFlowOrderController {
         return ResponseData.ok(info);
     }
 
-    @GetMapping(value = "/order/executionHistory")
-    @URIAccess(menuName = "获取工单执行历史", args = {
-            @URIAccess.ArgsMapping(fieldNameEn = "orderUuid", fieldNameCh = "流程工单唯一标识"),
-            @URIAccess.ArgsMapping(fieldNameEn = "areaId4", fieldNameCh = "网格编号")
-    })
-    public ResponseData orderExecutionHistory(@RequestParam String orderUuid,
-                                              @RequestParam(required = false) String areaId4) {
-//        List<SelectionDo> list = businessCircleInfoService.busiCircleSelection(areaId3, areaId4);
-        return ResponseData.ok(null);
+    @PostMapping(value = "/resource/instance/cancel")
+    @URIAccess(menuName = "步骤实例进行强制废止")
+    public ResponseData cancelOrder(@Valid @RequestBody CancelResourceInputBO inputBO) {
+        String resourceInstanceUuid = orderService.cancelResourceInstance(inputBO);
+        return ResponseData.ok(resourceInstanceUuid);
     }
 
     @PostMapping(value = "/resource/instance/complete")
@@ -141,13 +137,6 @@ public class WbFlowOrderController {
             inputBO.setOperationSnapshot(null); // 非必填，只做存储。可不传
         }
         String resourceInstanceUuid = orderService.reviewResourceInstance(inputBO);
-        return ResponseData.ok(resourceInstanceUuid);
-    }
-
-    @PostMapping(value = "/resource/instance/cancel")
-    @URIAccess(menuName = "步骤实例进行强制废止")
-    public ResponseData cancelOrder(@Valid @RequestBody CancelResourceInputBO inputBO) {
-        String resourceInstanceUuid = orderService.cancelResourceInstance(inputBO);
         return ResponseData.ok(resourceInstanceUuid);
     }
 }

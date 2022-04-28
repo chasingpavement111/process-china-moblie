@@ -183,7 +183,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         WbFlowResourceInstanceDO processingInstanceEntity = getInstanceByInstanceUuid(instanceUuid);
         // 强制废止操作，可以在任意状态进行。审核、完成操作，只能对非终态的步骤实例进行
         ParamException.isTrue(BooleanUtils.isNotTrue(OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.contains(processingInstanceEntity.getStatus())),
-                String.format("instance[instanceUuid=%s] status is [%s], only in [%s] status allowed to be completed",
+                String.format("instance[instanceUuid=%s] status is [%s], only in [%s] status allowed to do operation",
                         processingInstanceEntity.getResourceInstanceUuid(), processingInstanceEntity.getStatus(),
                         OrderInstanceStatusEnum.UNFINISHED_STATUS_NAME_EN_LIST.stream().collect(Collectors.joining(","))));
 
@@ -225,6 +225,16 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
         List<ResourceDefinitionBO> outGoingResourceDefinitionBOList = getNextOutGoingExecutionResource(orderEntity, processingInstanceEntity, inputVariablesMapOfOrder);
         List<String> uuidListOfOutGoingInstanceEntity = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(outGoingResourceDefinitionBOList)) {
+            if (1 == outGoingResourceDefinitionBOList.size()
+                    && StencilEnum.THROW_NONE_EVENT.equals(outGoingResourceDefinitionBOList.get(0).getStencilEnum())) {
+                // 到达终点，流程結束
+                OperationOnResourceInstanceResultDTO resultDTO = new OperationOnResourceInstanceResultDTO();
+                resultDTO.setInstanceUuid(instanceUuid);
+                resultDTO.setFlowReachToEnd(true);
+                resultDTO.setOutGoingInstanceUuidList(Collections.EMPTY_LIST);
+                resultDTO.setOutputVariablesMap(outputVariablesMapOfInstance);
+                return resultDTO;
+            }
             uuidListOfOutGoingInstanceEntity = createOutGoings(orderEntity, processingInstanceEntity.getResourceInstanceUuid(), outGoingResourceDefinitionBOList, inputVariablesMapOfOrder);
             // update order
             updateLatterInstance(instanceUuid, uuidListOfOutGoingInstanceEntity);
@@ -232,6 +242,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
 
         OperationOnResourceInstanceResultDTO resultDTO = new OperationOnResourceInstanceResultDTO();
         resultDTO.setInstanceUuid(instanceUuid);
+        resultDTO.setFlowReachToEnd(false);
         resultDTO.setOutGoingInstanceUuidList(uuidListOfOutGoingInstanceEntity);
         resultDTO.setOutputVariablesMap(outputVariablesMapOfInstance);
         return resultDTO;
@@ -432,6 +443,7 @@ public class WbFlowResourceInstanceServiceImpl extends ServiceImpl<WbFlowResourc
     }
 
     private void updateLatterInstance(String instanceUuid, List<String> uuidListOfOutGoingInstanceEntity) {
+        // todo zj 并行步骤。要同步将后续instanceUuid写入到其他已经完成的并行步骤实例中
         WbFlowResourceInstanceDO updateInstanceEntity = new WbFlowResourceInstanceDO();
         updateInstanceEntity.setResourceInstanceUuid(instanceUuid);
         updateInstanceEntity.setLatterResourceInstanceUuidList(uuidListOfOutGoingInstanceEntity);

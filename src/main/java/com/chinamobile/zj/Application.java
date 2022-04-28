@@ -57,7 +57,8 @@ public class Application {
             {// todo zj 修改。
                 String jsonXml;
 //                File jsonFileOfProcess = new File("C:\\work\\zj\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");
-                File jsonFileOfProcess = new File("C:\\projects\\china_mobile\\java\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");
+//                File jsonFileOfProcess = new File("C:\\projects\\china_mobile\\java\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");
+                File jsonFileOfProcess = new File("C:\\code\\java\\process-china-moblie\\src\\main\\resources\\static\\precheck_install_process.json");
                 try {
                     jsonXml = FileUtils.readFileToString(jsonFileOfProcess,
                             Charset.defaultCharset());

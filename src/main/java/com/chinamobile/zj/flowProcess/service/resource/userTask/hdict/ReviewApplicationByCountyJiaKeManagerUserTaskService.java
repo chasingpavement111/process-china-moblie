@@ -63,7 +63,7 @@ public class ReviewApplicationByCountyJiaKeManagerUserTaskService extends Abstra
 
         // 只允许被转派家客经理，进行审批。
         ParamException.isTrue(!assignedJiaKeCountyManagerId.equals(getOperatorId()),
-                String.format("operator[CRMId=%s] is not the jiaKeManager that county hdict user assigned, only user[CRMId=%s] can operator this step!",
+                String.format("operator[CRMId=%s] is not the assigned jiaKeManager, only user[CRMId=%s] can operator this step!",
                         getOperatorId(), assignedJiaKeCountyManagerId));
 
     }

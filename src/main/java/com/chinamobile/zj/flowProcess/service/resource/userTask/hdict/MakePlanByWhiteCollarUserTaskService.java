@@ -79,7 +79,7 @@ public class MakePlanByWhiteCollarUserTaskService extends BaseUserTaskService im
         if (hasCountyManager) {
             // 只允许 被转派家客经理 操作。
             ParamException.isTrue(!assignedJiaKeCountyManagerId.equals(getOperatorId()),
-                    String.format("operator[CRMId=%s] is not the jiaKeManager that countyHdict assigned, only user[CRMId=%s] can operator this step!",
+                    String.format("operator[CRMId=%s] is not the assigned jiaKeManager, only user[CRMId=%s] can operator this step!",
                             getOperatorId(), assignedJiaKeCountyManagerId));
         } else {
             // 只允许  (同一个)县Hdict 操作

@@ -67,7 +67,7 @@ public class ReviewAndConstructByMaintainerUserTaskService extends AbstractHdict
 
         // 只允许 被指派进行现场施工的装维人员 进行审核
         ParamException.isTrue(!assignedConstructorId.equals(getOperatorId()),
-                String.format("operator[CRMId=%s] is not the county maintainer user, only user[CRMId=%s] can operator this step!",
+                String.format("operator[CRMId=%s] is not the assigned county maintainer user, only user[CRMId=%s] can operator this step!",
                         getOperatorId(), assignedConstructorId));
     }
 

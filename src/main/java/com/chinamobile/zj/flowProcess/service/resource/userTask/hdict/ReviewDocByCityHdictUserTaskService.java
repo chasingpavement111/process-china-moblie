@@ -18,7 +18,7 @@ import java.util.Optional;
 public class ReviewDocByCityHdictUserTaskService extends AbstractHdictReviewUserTaskService {
 
     @InheritParam
-    private Boolean cityHdictUserId;
+    private String cityHdictUserId;
 
     @OutputParam
     private Boolean docPassedByCityHdict;
@@ -66,7 +66,7 @@ public class ReviewDocByCityHdictUserTaskService extends AbstractHdictReviewUser
         ParamException.isTrue(BooleanUtils.isNotTrue(operatorInfoOpt.isPresent()),
                 String.format("invalid userId[%s], user not exist.", getOperatorId()));
         HdictUserInfoDO operatorInfo = operatorInfoOpt.get();
-        // 只允许 （同一个）地市Hdict 进行审核
+        // 只允许 （同一个）地市Hdict 进行审核 todo zj test 待解除注释
         ParamException.isTrue(!cityHdictUserId.equals(getOperatorId()),
                 String.format("operator[CRMId=%s] is not the city hdict user, only user[CRMId=%s] can operator this step!",
                         getOperatorId(), cityHdictUserId));
@@ -75,11 +75,11 @@ public class ReviewDocByCityHdictUserTaskService extends AbstractHdictReviewUser
         setOperatorRoleName(operatorInfo.getRoleName());
     }
 
-    public Boolean getCityHdictUserId() {
+    public String getCityHdictUserId() {
         return cityHdictUserId;
     }
 
-    public void setCityHdictUserId(Boolean cityHdictUserId) {
+    public void setCityHdictUserId(String cityHdictUserId) {
         this.cityHdictUserId = cityHdictUserId;
     }
 
