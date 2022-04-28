@@ -1,3 +1,5 @@
+-- mysql 定义
+
 create table wb_flow_definition
 (
     flow_uuid               varchar(50) not null comment '流程定义唯一标识'
@@ -45,6 +47,137 @@ create table wb_flow_resource_instance
     comment '流程步骤实例表';
 
 
+-- oracle 定义
+create table wb_flow_definition
+(
+    flow_uuid               varchar(50) not null
+        primary key,
+    flow_definition_key     varchar(50) not null,
+    flow_definition_version varchar(10) not null,
+    json                    longtext    not null
+)
+    /
+
+comment on table wb_flow_definition is '流程定义表'
+/
+
+comment on column wb_flow_definition.flow_uuid is '流程定义唯一标识'
+/
+
+comment on column wb_flow_definition.flow_definition_key is '流程定义标识'
+/
+
+comment on column wb_flow_definition.flow_definition_version is '版本号（flow_definistion_key + flow_definition_version 唯一确定一份流程定义）'
+/
+
+comment on column wb_flow_definition.json is '定义结构体json'
+/
+
+
+-- auto-generated definition
+create table wb_flow_order
+(
+    order_uuid              varchar(50)    not null
+        primary key,
+    flow_definition_key     varchar(50)    not null,
+    flow_definition_version varchar(10)    not null,
+    create_time             varchar(19)    not null,
+    creator_id              varchar(100)   not null,
+    input_variables         varchar(10000) null,
+    update_operator_id      varchar(100)   null,
+    update_time             varchar(19)    null,
+    status                  varchar(20)    not null
+)
+    /
+comment on table wb_flow_order is '流程工单表'
+/
+
+comment on column wb_flow_order.order_uuid is '流程工单唯一标识'
+/
+
+comment on column wb_flow_order.flow_definition_key is '流程定义的唯一标识'
+/
+
+comment on column wb_flow_order.flow_definition_version is '流程定义的版本号（每次更新都会更新版本号）'
+/
+
+comment on column wb_flow_order.create_time is '创建时间，格式：yyyy-MM-dd HH24:mi:ss'
+/
+
+comment on column wb_flow_order.creator_id is '创建人CRM编号'
+/
+
+comment on column wb_flow_order.input_variables is '入参json串'
+/
+
+comment on column wb_flow_order.update_operator_id is '最新操作人CRM编号'
+/
+
+comment on column wb_flow_order.update_time is '更新时间，格式：yyyy-MM-dd HH24:mi:ss'
+/
+comment on column wb_flow_order.status is '状态'
+/
+
+-- auto-generated definition
+create table wb_flow_resource_instance
+(
+    resource_instance_uuid        varchar(50)    not null
+        primary key,
+    order_uuid                    varchar(50)    not null,
+    flow_resource_definition_key  varchar(100)   not null,
+    former_resource_instance_uuid varchar(50)    null,
+    latter_resource_instance_uuid varchar(1000)  null,
+    create_time                   varchar(19)    not null,
+    input_variables               varchar(10000) null,
+    operator_id                   varchar(100)   null,
+    operate_time                  varchar(19)    null,
+    output_variables              varchar(10000) null,
+    status                        varchar(20)    not null,
+    valid                         varchar(1)     not null
+)
+    /
+
+comment on table wb_flow_resource_instance is '流程步骤实例表'
+/
+
+comment on column wb_flow_resource_instance.resource_instance_uuid is '步骤实例唯一标识'
+/
+
+comment on column wb_flow_resource_instance.order_uuid is '步骤所属工单的工单标识'
+/
+
+comment on column wb_flow_resource_instance.flow_resource_definition_key is '实例对应的流程步骤定义标识'
+/
+
+comment on column wb_flow_resource_instance.former_resource_instance_uuid is '上一步的步骤实例的实例唯一标识'
+/
+
+comment on column wb_flow_resource_instance.latter_resource_instance_uuid is '下一步的步骤实例的实例唯一标识(下一步可能有多个)'
+/
+
+comment on column wb_flow_resource_instance.create_time is '创建时间，格式：yyyy-MM-dd HH24:mi:ss'
+/
+
+comment on column wb_flow_resource_instance.input_variables is '入参结构体json'
+/
+
+comment on column wb_flow_resource_instance.operator_id is '操作人CRM编号'
+/
+
+comment on column wb_flow_resource_instance.operate_time is '更新时间，格式：yyyy-MM-dd HH24:mi:ss'
+/
+
+comment on column wb_flow_resource_instance.output_variables is '出参结构体json'
+/
+
+comment on column wb_flow_resource_instance.status is '状态'
+/
+
+comment on column wb_flow_resource_instance.valid is '是否有效：1（有效）/ 0（无效，被驳回需要重新执行）'
+/
+
+
+-- insert data sql
 INSERT INTO activiti.wb_flow_definition (flow_uuid, flow_definition_key, flow_definition_version, json) VALUES ('bb', 'check_install_process', '1.02', '{
     "resourceId":"bd350884-53d6-4a63-a6fd-ef35c14c8d09",
     "properties":{
