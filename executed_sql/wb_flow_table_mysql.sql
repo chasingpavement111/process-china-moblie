@@ -54,7 +54,7 @@ create table wb_flow_definition
         primary key,
     flow_definition_key     varchar(50) not null,
     flow_definition_version varchar(10) not null,
-    json                    longtext    not null
+    json                    clob    not null -- todo zj 还是不够大。待解决
 )
     /
 
@@ -83,7 +83,7 @@ create table wb_flow_order
     flow_definition_version varchar(10)    not null,
     create_time             varchar(19)    not null,
     creator_id              varchar(100)   not null,
-    input_variables         varchar(10000) null,
+    input_variables         clob null,
     update_operator_id      varchar(100)   null,
     update_time             varchar(19)    null,
     status                  varchar(20)    not null
@@ -128,10 +128,10 @@ create table wb_flow_resource_instance
     former_resource_instance_uuid varchar(50)    null,
     latter_resource_instance_uuid varchar(1000)  null,
     create_time                   varchar(19)    not null,
-    input_variables               varchar(10000) null,
+    input_variables               clob null,
     operator_id                   varchar(100)   null,
     operate_time                  varchar(19)    null,
-    output_variables              varchar(10000) null,
+    output_variables              clob null,
     status                        varchar(20)    not null,
     valid                         varchar(1)     not null
 )
@@ -178,7 +178,7 @@ comment on column wb_flow_resource_instance.valid is '是否有效：1（有效�
 
 
 -- insert data sql
-INSERT INTO activiti.wb_flow_definition (flow_uuid, flow_definition_key, flow_definition_version, json) VALUES ('bb', 'check_install_process', '1.02', '{
+INSERT INTO wb_flow_definition (flow_uuid, flow_definition_key, flow_definition_version, json) VALUES ('bb', 'check_install_process', '1.02', '{
     "resourceId":"bd350884-53d6-4a63-a6fd-ef35c14c8d09",
     "properties":{
         "process_id":"check_install_process",
@@ -4029,7 +4029,7 @@ INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('chenyaot
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('zhoulianghong', '周良红', 'hdict003');
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('yuchengqun', '余成群', 'hdict003');
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('xusheng14', '徐晟', 'hdict003');
-INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('wuye6', '吴烨', 'hdict005');
+INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('xuweiquan2', '徐卫权', 'hdict005');
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('wbzhanglansong', '章兰松', 'hdict002');
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('wbqianyuancong', '钱媛聪', 'hdict002');
 INSERT INTO WJJ_HDICT_USERROLE (LOGIN_ID, LOGIN_NAME, ROLE_ID) VALUES ('chenxiaoyong4', '陈晓勇', 'hdict002');
